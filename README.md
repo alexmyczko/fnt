@@ -130,4 +130,6 @@ Maybe add support for non-free and contrib.
 
 Maybe write a fnt.1 manual page.
 
-Maybe add support for individual https://github.com/google/fonts
+Maybe add support for individual fonts from https://github.com/google/fonts
+
+Maybe add support for individual fonts from https://fontlibrary.org
