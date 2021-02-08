@@ -31,6 +31,12 @@ case $s in
 		i="pkg"
 		target=$HOME/.fonts/
 	;;
+	Haiku)
+		#echo Haiku OS
+		check="curl lynx"
+		i="pkgman"
+		target=$HOME/config/non-packaged/data/fonts/
+	;;
 	*)
 		echo Please report $s to https://github.com/alexmyczko/fnt/issues
 		exit 1
