@@ -7,6 +7,24 @@ If you run [Debian](https://www.debian.org) stable, you don't get the latest fon
 
 If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject.org), [brew](https://brew.sh), nor [macports](https://www.macports.org) come with a great list of available to install fonts.
 
+# Installation
+
+\# cp fnt /usr/bin
+
+# Usage
+
+```
+fnt update
+fnt search agave
+fnt preview agave
+fnt install agave
+fnt list
+```
+
+# Thanks
+
+The preview mode works using https://github.com/hpjansson/chafa and https://screenshots.debian.net
+
 # Missing a font?
 
 Feel free to create an issue, if the font comes with sources and its license is DFSG compliant, I'm happy to package it for a dollar. Free if I like it.
