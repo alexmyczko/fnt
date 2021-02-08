@@ -27,6 +27,10 @@ fnt list
 
 The preview mode works using https://github.com/hpjansson/chafa and https://screenshots.debian.net
 
+# Screenshots
+
+Create your own with http://shell.aiei.ch/typography/
+
 # Missing a font?
 
 Feel free to create an issue, if the font comes with sources and its license is DFSG compliant, I'm happy to package it for a dollar. Free if I like it.
