@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # apt but only for fonts
 # alex@aiei.ch
@@ -23,6 +23,12 @@ case $s in
 		#echo Linux
 		check="curl chafa lynx otfinfo"
 		i="apt"
+		target=$HOME/.fonts/
+	;;
+	FreeBSD)
+		#echo FreeBSD
+		check="curl chafa lynx otfinfo"
+		i="pkg"
 		target=$HOME/.fonts/
 	;;
 	*)
