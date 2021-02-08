@@ -9,7 +9,9 @@ If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject
 
 # Installation
 
-\# cp fnt /usr/bin
+```
+cp fnt /usr/bin
+```
 
 # Usage
 
