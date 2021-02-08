@@ -123,3 +123,5 @@ Get [ReactOS](https://reactos.org) with bash, and make `fnt` work there.
 Maybe add support for non-free and contrib.
 
 Maybe write a fnt.1 manual page.
+
+Maybe add support for individual https://github.com/google/fonts
