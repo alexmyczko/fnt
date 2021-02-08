@@ -34,3 +34,5 @@ Feel free to create an issue, if the font comes with sources and its license is 
 # TODO
 
 Get [ReactOS](https://reactos.org) with bash, and make `fnt` work there.
+
+Maybe add support for non-free and contrib.
