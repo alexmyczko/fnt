@@ -84,9 +84,8 @@ case $1 in
 	;;
 
 	install|-i)
-
-		if [ ! -f $HOME/.fnt/Packages.xz ]; then
-			echo "Could not find $HOME/.fnt/Packages.xz"
+		if [ ! -f ${TMPDIR}/Packages.xz ]; then
+			echo "Could not find ${TMPDIR}/Packages.xz"
 			echo "Please run $0 update"
 			exit 1
 		fi
