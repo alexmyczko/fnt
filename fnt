@@ -87,7 +87,12 @@ case $1 in
 		if [ ! -f ${TMPDIR}/Packages.xz ]; then
 			echo "Could not find ${TMPDIR}/Packages.xz"
 			echo "Please run $0 update"
+			# could also just run itself with update...
 			exit 1
+		fi
+		
+		if [ ! -d ${target} ]; then
+			mkdir -p ${target}
 		fi
 
 		# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
