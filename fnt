@@ -81,6 +81,14 @@ case $1 in
 		#echo $img
 		curl -s $img -o ${TMPDIR}/preview.png
 		chafa --invert -c none --symbols block+border-solid ${TMPDIR}/preview.png
+		p=$(cat $HOME/.fnt/Packages.xz |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep fonts-$2|head -1)
+		name=$(echo $p | awk '{print $2}')
+		ver=$(echo $p | awk '{print $4}')
+		instsize=$(echo $p | awk '{print $6}')
+		downsize=$(echo $p | awk '{print $NF}')
+		url=$(echo $p | awk '{print $(NF-2)}')
+		d=$(echo $p | sed s,.*Description:\ ,, | sed s,\ Homepage:.*,,)
+		echo "$d [$ver D:$downsize I:${instsize}000]"
 	;;
 
 	install|-i)
