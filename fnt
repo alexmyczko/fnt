@@ -84,6 +84,13 @@ case $1 in
 	;;
 
 	install|-i)
+
+		if [ ! -f $HOME/.fnt/Packages.xz ]; then
+			echo "Could not find $HOME/.fnt/Packages.xz"
+			echo "Please run $0 update"
+			exit 1
+		fi
+
 		# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
 		# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
 		p=$(cat $HOME/.fnt/Packages.xz |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep fonts-$2|head -1)
