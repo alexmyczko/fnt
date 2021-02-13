@@ -113,6 +113,12 @@ agave-b-autohinted.ttf [699]
 agave-r-autohinted.ttf [2443]
 ```
 
+If you want to install all available fonts, you could run something like this:
+
+`for a in `fnt search |sed s,fonts-,,`; do fnt install $a; done`
+
+You end up with ~2700 font files, taking up 1.6 GB.
+
 # Thanks
 
 The preview mode works using https://github.com/hpjansson/chafa and https://screenshots.debian.net
