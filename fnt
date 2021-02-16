@@ -1,147 +1,139 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-# apt but only for fonts
+# APT but only for fonts
 # alex@aiei.ch
 #
 # FIXME as user it installs to user directories, as root it installs system wide
 # TODO tested and usable for linux and macOS
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
-TMPDIR=$HOME/.fnt
-INDEX=http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz
-MIRROR=http://ftp.ch.debian.org/debian/
+TMPDIR="${TMPDIR:-/tmp}"
+INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
+MIRROR="http://ftp.ch.debian.org/debian/"
 
 s=$(uname -s)
-case $s in
+case "$s" in
 	Darwin)
-		#echo macOS
+		# Echo macOS
 		check="curl brew otfinfo chafa lynx"
-		# otfinfo comes with lcdf-typetools
+		# Otfinfo comes with lcdf-typetools
 		i="brew"
-		target=$HOME/Library/Fonts/
+		target="$HOME/Library/Fonts/"
 	;;
 	Linux|GNU/kFreeBSD)
-		#echo Linux
+		# Echo Linux
 		check="curl chafa lynx otfinfo"
 		i="apt"
-		target=$HOME/.fonts/
+		target="$HOME/.fonts/"
 	;;
 	FreeBSD)
-		#echo FreeBSD
+		# Echo FreeBSD
 		check="curl chafa lynx otfinfo"
 		i="pkg"
-		target=$HOME/.fonts/
+		target="$HOME/.fonts/"
 	;;
 	Haiku)
-		#echo Haiku OS
+		# Echo Haiku OS
 		check="curl lynx"
 		i="pkgman"
-		target=$HOME/config/non-packaged/data/fonts/
+		target="$HOME/config/non-packaged/data/fonts/"
 	;;
 	*)
-		echo Please report $s to https://github.com/alexmyczko/fnt/issues
+		echo "Please report $s to https://github.com/alexmyczko/fnt/issues"
 		exit 1
 	;;
 esac
 
 for a in $check; do
-    which $a >/dev/null
+    which "$a" >/dev/null
     if [ ! $? -eq 0 ]; then
-        echo $a not found, please use $i to install it.
+        echo "$a not found, please use $i to install it."
         exit 1
     fi
 done
 
-if [ ${1}x == x ]; then
+if [ "${1}x" = 'x' ]; then
 	echo "Syntax: fnt [ update | list ]"
 	echo "        fnt [ install | remove | preview | search ] font"
 	echo
 	exit 0
 fi
 
-case $1 in
-	update|-u)
+case "$1" in
+	update|-u|u)
 		echo Updating...
-		if [ ! -d ${TMPDIR} ]; then mkdir -p ${TMPDIR}; fi
-	        if [ -f ${TMPDIR}/Packages.xz ]; then rm ${TMPDIR}/Packages.xz; fi
-        	curl -s $INDEX -o ${TMPDIR}/Packages.xz
+		if [ ! -d "${TMPDIR}" ]; then mkdir -p "${TMPDIR}"; fi
+	        if [ -f "${TMPDIR}/Packages.xz" ]; then rm "${TMPDIR}/Packages.xz"; fi
+        	curl -s "$INDEX" -o "${TMPDIR}/Packages.xz"
 	;;
 
-	list|-l)
+	list|-l|l)
 		#echo Listing...
 		# macOS mainly comes with *.ttc (truetype font collections, that can not be processed by otfinfo)
 		#ls -1 /System/Library/Fonts/*.?tf /usr/share/fonts/*type/*/*.?tf $HOME/Library/Fonts/*.?tf $HOME/.fonts/*.?tf 2>/dev/null | while read f; do
-		ls -1 $HOME/Library/Fonts/*.?tf $HOME/.fonts/*.?tf 2>/dev/null | while read f; do
-			echo $f [$(otfinfo -u "$f" 2>/dev/null|wc -l|awk '{print $1}')] | sed s,.*/,,
+		ls -1 "$HOME/Library/Fonts/*.?tf" "$HOME/.fonts/*.?tf 2>/dev/null" | while read f; do
+			echo "$f" [$(otfinfo -u "$f" 2>/dev/null|wc -l|awk '{print $1}')] | sed s,.*/,,
 		done
 	;;
-
-	preview|-p)
-		#echo Previewing...
-		img=$(lynx -dump https://screenshots.debian.net/package/fonts-$2 | grep large.png | sed s,.*http,http,)
-		#echo $img
-		curl -s $img -o ${TMPDIR}/preview.png
-		chafa --invert -c none --symbols block+border-solid ${TMPDIR}/preview.png
-		p=$(cat $HOME/.fnt/Packages.xz |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep fonts-$2|head -1)
-		name=$(echo $p | awk '{print $2}')
-		ver=$(echo $p | awk '{print $4}')
-		instsize=$(echo $p | awk '{print $6}')
-		downsize=$(echo $p | awk '{print $NF}')
-		url=$(echo $p | awk '{print $(NF-2)}')
-		d=$(echo $p | sed s,.*Description:\ ,, | sed s,\ Homepage:.*,,)
+	preview|-p|p)
+		# Echo Previewing...
+		img=$(lynx -dump "https://screenshots.debian.net/package/fonts-$2" | grep large.png | sed s,.*http,http,)
+		# Echo $img
+		curl -s "$img" -o "${TMPDIR}/preview.png"
+		chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
+		p=$(cat "$HOME/.fnt/Packages.xz" |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
+		name=$(echo "$p" | awk '{print $2}')
+		ver=$(echo "$p" | awk '{print $4}')
+		instsize=$(echo "$p" | awk '{print $6}')
+		downsize=$(echo "$p" | awk '{print $NF}')
+		url=$(echo "$p" | awk '{print $(NF-2)}')
+		d=$(echo "$p" | sed s,.*Description:\ ,, | sed s,\ Homepage:.*,,)
 		echo "$d [$ver D:$downsize I:${instsize}000]"
 	;;
-
-	install|-i)
-		if [ ! -f ${TMPDIR}/Packages.xz ]; then
+	install|-i|i)
+		if [ ! -f "${TMPDIR}/Packages.xz" ]; then
 			echo "Could not find ${TMPDIR}/Packages.xz"
 			echo "Please run $0 update"
 			# could also just run itself with update...
 			exit 1
 		fi
-		
-		if [ ! -d ${target} ]; then
-			mkdir -p ${target}
+		if [ ! -d "${target}" ]; then
+			mkdir -p "${target}"
 		fi
-
 		# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
 		# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
-		p=$(cat $HOME/.fnt/Packages.xz |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep fonts-$2|head -1)
+		p=$(cat "$HOME/.fnt/Packages.xz" |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
 		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
-        if [[ -z "$p" ]]; then
+        if [ -z "$p" ]; then
             echo "Font \"$2\" not found"
             exit 1
         fi
-		name=$(echo $p | awk '{print $2}')
-		ver=$(echo $p | awk '{print $4}')
-		instsize=$(echo $p | awk '{print $6}')
-		downsize=$(echo $p | awk '{print $NF}')
-		url=$(echo $p | awk '{print $(NF-2)}')
-		f=$(basename $url)
+		name=$(echo "$p" | awk '{print $2}')
+		ver=$(echo "$p" | awk '{print $4}')
+		instsize=$(echo "$p" | awk '{print $6}')
+		downsize=$(echo "$p" | awk '{print $NF}')
+		url=$(echo "$p" | awk '{print $(NF-2)}')
+		f=$(basename "$url")
 		echo "Installing fonts-${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}${url}]..."
-		curl -s ${MIRROR}${url} -o ${TMPDIR}/$f
-		cd ${TMPDIR}
-		ar x $f
+		curl -s "${MIRROR}${url}" -o "${TMPDIR}/$f"
+		cd "${TMPDIR}" || exit 1
+		ar x "$f"
 		tar xJf data.tar.xz
-		find ${TMPDIR} . -name "*.?tf" -exec cp {} $target \;
-		rm $f control.tar* data.tar* debian-binary
-		rm -rf ${TMPDIR}/usr
+		find "${TMPDIR}" . -name "*.?tf" -exec cp {} "$target" \;
+		rm "$f" control.tar* data.tar* debian-binary
+		rm -rf "${TMPDIR:?}/usr"
 	;;
-
-	remove|-r)
-		echo Removing...
+	remove|-r|r)
+		echo "Removing..."
 		echo "Feel free to send patches or dollars (see the sponsor link)"
 	;;
-
-	search|-s)
-		cat $HOME/.fnt/Packages.xz |unxz |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+	search|-s|s)
+		cat "$HOME/.fnt/Packages.xz" |unxz |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
 	;;
-
 	moo)
-		echo This fnt does not have cow powers.
+		echo "This fnt does not have cow powers."
 	;;
-
 	*)
-		echo Nothing...
+		echo "Nothing..."
 	;;
 esac
