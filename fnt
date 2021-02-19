@@ -14,26 +14,26 @@ MIRROR="http://ftp.ch.debian.org/debian/"
 s=$(uname -s)
 case "$s" in
 	Darwin)
-		# Echo macOS
+		# echo macOS
 		check="curl brew otfinfo chafa lynx"
 		# Otfinfo comes with lcdf-typetools
 		i="brew"
 		target="$HOME/Library/Fonts/"
 	;;
 	Linux|GNU/kFreeBSD)
-		# Echo Linux
+		# echo Linux
 		check="curl chafa lynx otfinfo"
 		i="apt"
 		target="$HOME/.fonts/"
 	;;
 	FreeBSD)
-		# Echo FreeBSD
+		# echo FreeBSD
 		check="curl chafa lynx otfinfo"
 		i="pkg"
 		target="$HOME/.fonts/"
 	;;
 	Haiku)
-		# Echo Haiku OS
+		# echo Haiku OS
 		check="curl lynx"
 		i="pkgman"
 		target="$HOME/config/non-packaged/data/fonts/"
