@@ -15,26 +15,26 @@ s=$(uname -s)
 case $s in
 	Darwin)
 		#echo macOS
-		check="curl brew otfinfo chafa lynx"
+		check="curl brew otfinfo chafa"
 		# otfinfo comes with lcdf-typetools
 		i="brew"
 		target=$HOME/Library/Fonts/
 	;;
 	Linux|GNU/kFreeBSD)
 		#echo Linux
-		check="curl chafa lynx otfinfo"
+		check="curl chafa otfinfo"
 		i="apt"
 		target=$HOME/.fonts/
 	;;
 	FreeBSD)
 		#echo FreeBSD
-		check="curl chafa lynx otfinfo"
+		check="curl chafa otfinfo"
 		i="pkg"
 		target=$HOME/.fonts/
 	;;
 	Haiku)
 		#echo Haiku OS
-		check="curl lynx"
+		check="curl"
 		i="pkgman"
 		target=$HOME/config/non-packaged/data/fonts/
 	;;
@@ -78,9 +78,8 @@ case $1 in
 
 	preview|-p)
 		#echo Previewing...
-		img=$(lynx -dump https://screenshots.debian.net/package/fonts-$2 | grep large.png | sed s,.*http,http,)
 		#echo $img
-		curl -s $img -o ${TMPDIR}/preview.png
+		curl -L -s https://screenshots.debian.net/package/fonts-$2 -o ${TMPDIR}/preview.png
 		chafa --invert -c none --symbols block+border-solid ${TMPDIR}/preview.png
 		p=$(cat $HOME/.fnt/Packages.xz |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep fonts-$2|head -1)
 		name=$(echo $p | awk '{print $2}')
