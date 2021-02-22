@@ -16,7 +16,7 @@ case "$s" in
 	Darwin)
 		# echo macOS
 		check="curl brew otfinfo chafa lynx"
-		# Otfinfo comes with lcdf-typetools
+		# otfinfo comes with lcdf-typetools
 		i="brew"
 		target="$HOME/Library/Fonts/"
 	;;
@@ -60,14 +60,14 @@ if [ "${1}x" = 'x' ]; then
 fi
 
 case "$1" in
-	update|-u|u)
+	update|-u)
 		echo Updating...
 		if [ ! -d "${TMPDIR}" ]; then mkdir -p "${TMPDIR}"; fi
 	        if [ -f "${TMPDIR}/Packages.xz" ]; then rm "${TMPDIR}/Packages.xz"; fi
         	curl -s "$INDEX" -o "${TMPDIR}/Packages.xz"
 	;;
 
-	list|-l|l)
+	list|-l)
 		#echo Listing...
 		# macOS mainly comes with *.ttc (truetype font collections, that can not be processed by otfinfo)
 		#ls -1 /System/Library/Fonts/*.?tf /usr/share/fonts/*type/*/*.?tf $HOME/Library/Fonts/*.?tf $HOME/.fonts/*.?tf 2>/dev/null | while read f; do
@@ -75,7 +75,7 @@ case "$1" in
 			echo "$f" [$(otfinfo -u "$f" 2>/dev/null|wc -l|awk '{print $1}')] | sed s,.*/,,
 		done
 	;;
-	preview|-p|p)
+	preview|-p)
 		# Echo Previewing...
 		img=$(lynx -dump "https://screenshots.debian.net/package/fonts-$2" | grep large.png | sed s,.*http,http,)
 		# Echo $img
@@ -90,7 +90,7 @@ case "$1" in
 		d=$(echo "$p" | sed s,.*Description:\ ,, | sed s,\ Homepage:.*,,)
 		echo "$d [$ver D:$downsize I:${instsize}000]"
 	;;
-	install|-i|i)
+	install|-i)
 		if [ ! -f "${TMPDIR}/Packages.xz" ]; then
 			echo "Could not find ${TMPDIR}/Packages.xz"
 			echo "Please run $0 update"
@@ -123,11 +123,11 @@ case "$1" in
 		rm "$f" control.tar* data.tar* debian-binary
 		rm -rf "${TMPDIR:?}/usr"
 	;;
-	remove|-r|r)
+	remove|-r)
 		echo "Removing..."
 		echo "Feel free to send patches or dollars (see the sponsor link)"
 	;;
-	search|-s|s)
+	search|-s)
 		cat "$HOME/.fnt/Packages.xz" |unxz |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
 	;;
 	moo)
