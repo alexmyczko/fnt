@@ -68,7 +68,7 @@ case "$1" in
 	;;
 
 	list|-l)
-		#echo Listing...
+		# echo Listing...
 		# macOS mainly comes with *.ttc (truetype font collections, that can not be processed by otfinfo)
 		#ls -1 /System/Library/Fonts/*.?tf /usr/share/fonts/*type/*/*.?tf $HOME/Library/Fonts/*.?tf $HOME/.fonts/*.?tf 2>/dev/null | while read f; do
 		ls -1 "$HOME/Library/Fonts/*.?tf" "$HOME/.fonts/*.?tf 2>/dev/null" | while read f; do
@@ -76,9 +76,9 @@ case "$1" in
 		done
 	;;
 	preview|-p)
-		# Echo Previewing...
+		# echo Previewing...
 		img=$(lynx -dump "https://screenshots.debian.net/package/fonts-$2" | grep large.png | sed s,.*http,http,)
-		# Echo $img
+		# echo $img
 		curl -s "$img" -o "${TMPDIR}/preview.png"
 		chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
 		p=$(cat "$HOME/.fnt/Packages.xz" |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
