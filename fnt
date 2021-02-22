@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # APT but only for fonts
 # alex@aiei.ch
