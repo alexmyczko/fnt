@@ -79,7 +79,7 @@ case "$1" in
 		# echo Previewing...
 		curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"
 		chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
-		p=$(cat "$HOME/.fnt/Packages.xz" |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
+		p=$(unxz -c "$HOME/.fnt/Packages.xz" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
 		name=$(echo "$p" | awk '{print $2}')
 		ver=$(echo "$p" | awk '{print $4}')
 		instsize=$(echo "$p" | awk '{print $6}')
@@ -100,7 +100,7 @@ case "$1" in
 		fi
 		# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
 		# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
-		p=$(cat "$HOME/.fnt/Packages.xz" |unxz| grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
+		p=$(unxz -c "$HOME/.fnt/Packages.xz" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
 		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
         if [ -z "$p" ]; then
             echo "Font \"$2\" not found"
@@ -126,7 +126,7 @@ case "$1" in
 		echo "Feel free to send patches or dollars (see the sponsor link)"
 	;;
 	search|-s)
-		cat "$HOME/.fnt/Packages.xz" |unxz |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
