@@ -17,6 +17,7 @@ Google fonts, ~1280 fonts available, (`google-` prefixed) see: https://github.co
 
 ```
 cp fnt /usr/bin
+chmod +x /usr/bin/fnt
 ```
 
 # Usage
@@ -117,7 +118,11 @@ If you want to install all available fonts, you could run something like this:
 
 `for a in $(fnt search |sed s,fonts-,,); do fnt install $a; done`
 
-You end up with ~2700 font files, taking up 1.6 GB.
+You end up with ~2700 font files (~480 fonts), taking up 1.6 GB.
+
+`for a in $(fnt search |sed s,google-,,); do fnt install $a; done`
+
+You end up with ~4200 font files (~1200 fonts), taking up 1.4 GB.
 
 # Thanks
 
@@ -133,10 +138,8 @@ Feel free to create an issue, if the font comes with sources and its license is 
 
 # TODO
 
-Get [ReactOS](https://reactos.org) with bash, and make `fnt` work there.
+Maybe add support for [ReactOS](https://reactos.org) with bash, and make `fnt` work there.
 
-Maybe add support for non-free and contrib.
-
-Maybe write a fnt.1 manual page.
+Maybe write a `fnt.1` manual page.
 
 Maybe add support for individual fonts from https://fontlibrary.org
