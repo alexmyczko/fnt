@@ -129,6 +129,7 @@ case "$1" in
 	;;
 	search|-s)
 		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+		curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,'
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
