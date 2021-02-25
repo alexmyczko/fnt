@@ -8,7 +8,10 @@
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
 TMPDIR="${TMPDIR:-/tmp}"
+# debian sid index
 INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
+# google fonts index
+GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/ofl"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
 s=$(uname -s)
