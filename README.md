@@ -9,9 +9,9 @@ If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject
 
 # Font repositories
 
-Debian sid, ~480 fonts available, only those starting with fonts-: https://packages.debian.org/unstable/fonts/
+Debian sid, ~480 fonts available, only those starting with `fonts-`: https://packages.debian.org/unstable/fonts/
 
-Google fonts, ~1200 fonts available, when added (TODO/FIXME) 
+Google fonts, ~1280 fonts available, (`google-` prefixed) see: https://github.com/google/fonts
 
 # Installation
 
