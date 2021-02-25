@@ -122,6 +122,8 @@ case "$1" in
 		find "${TMPDIR}" . -name "*.?tf" -exec cp {} "$target" \;
 		rm "$f" control.tar* data.tar* debian-binary
 		rm -rf "${TMPDIR:?}/usr"
+		
+		# here comes the google web font installer part using grep '\..tf'
 	;;
 	remove|-r)
 		echo "Removing..."
