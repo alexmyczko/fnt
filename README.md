@@ -116,11 +116,11 @@ agave-r-autohinted.ttf [2443]
 
 If you want to install all available fonts, you could run something like this:
 
-`for a in $(fnt search |sed s,fonts-,,); do fnt install $a; done`
+`for a in $(fnt search |grep ^fonts- |sed s,fonts-,,); do fnt install $a; done`
 
 You end up with ~2700 font files (~480 fonts), taking up 1.6 GB.
 
-`for a in $(fnt search |sed s,google-,,); do fnt install $a; done`
+`for a in $(fnt search |grep ^google- |sed s,google-,,); do fnt install $a; done`
 
 You end up with ~4200 font files (~1200 fonts), taking up 1.4 GB.
 
