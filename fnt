@@ -11,7 +11,7 @@ TMPDIR="${TMPDIR:-/tmp}"
 # debian sid index
 INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
-GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/ofl"
+GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/ofl/"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
 s=$(uname -s)
@@ -131,7 +131,7 @@ case "$1" in
 	;;
 	search|-s)
 		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
-		curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,'
+		curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2"
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
