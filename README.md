@@ -13,9 +13,9 @@ Read more about [Google Web Fonts](https://uxdesign.cc/a-privacy-concern-about-g
 
 # Font repositories
 
-Debian sid, ~480 fonts available, only those starting with `fonts-`: https://packages.debian.org/unstable/fonts/
+[Debian sid](https://packages.debian.org/unstable/fonts/), ~480 fonts available, only those starting with `fonts-`
 
-Google fonts, ~1280 fonts available, (`google-` prefixed) see: https://github.com/google/fonts
+[Google fonts](https://github.com/google/fonts), ~1280 fonts available, (`google-` prefixed)
 
 # Installation
 
