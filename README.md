@@ -7,6 +7,10 @@ If you run [Debian](https://www.debian.org) stable, you don't get the latest fon
 
 If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject.org), [brew](https://brew.sh), nor [macports](https://www.macports.org) come with a great list of available to install fonts.
 
+# Privacy?
+
+Read more about [Google Web Fonts](https://uxdesign.cc/a-privacy-concern-about-google-fonts-5aa4418bf87e).
+
 # Font repositories
 
 Debian sid, ~480 fonts available, only those starting with `fonts-`: https://packages.debian.org/unstable/fonts/
