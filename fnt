@@ -78,8 +78,8 @@ case "$1" in
 	;;
 
 	info)
-		echo Information...
-		echo Available Fonts: $(fnt search | wc -l)
+		echo "Information..."
+		echo "Available Fonts: $(fnt search | wc -l)"
 	;;
 
 	list|-l)
@@ -117,10 +117,23 @@ case "$1" in
 		# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
 		p=$(unxz -c "$HOME/.fnt/Packages.xz" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
 		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
-        if [ -z "$p" ]; then
-            echo "Font \"$2\" not found"
-            exit 1
-        fi
+
+        	if [ -z "$p" ]; then
+		    q=$(curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
+
+		    if [ -z "$q" ]; then
+        		echo "Font \"$2\" not found"
+        		exit 1
+		    else
+			echo "Installing google-${2}"
+			# here comes the google web font installer part using grep '\..tf'
+			curl -s "$GINDEX/${2}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read f; do
+			    curl -g -s "${GINDEX}/${2}/$f" -o "$target/$f"
+			done
+			exit 0
+		    fi
+	        fi
+
 		name=$(echo "$p" | awk '{print $2}')
 		ver=$(echo "$p" | awk '{print $4}')
 		instsize=$(echo "$p" | awk '{print $6}')
@@ -135,8 +148,6 @@ case "$1" in
 		find "${TMPDIR}" . -name "*.?tf" -exec cp {} "$target" \;
 		rm "$f" control.tar* data.tar* debian-binary
 		rm -rf "${TMPDIR:?}/usr"
-		
-		# here comes the google web font installer part using grep '\..tf'
 	;;
 	remove|-r)
 		echo "Removing..."
@@ -144,7 +155,7 @@ case "$1" in
 	;;
 	search|-s)
 		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
-		curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2"
+		curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
