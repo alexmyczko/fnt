@@ -55,8 +55,16 @@ for a in $check; do
 done
 
 if [ "${1}x" = 'x' ]; then
-	echo "Syntax: fnt [ update | list ]"
+	echo "Syntax: fnt [ update | list | info ]"
 	echo "        fnt [ install | remove | preview | search ] font"
+	echo
+	echo "update|-u  updates the font package index of debian sid"
+	echo "list|-l    lists installed fonts with glyphcount per font"
+	echo "info       information about how many fonts can be installed"
+	echo "install|-i install a font"
+	echo "remove|-r  remove a font"
+	echo "preview|-p preview a font"
+	echo "search|-s  search for font"
 	echo
 	exit 0
 fi
@@ -67,6 +75,11 @@ case "$1" in
 		if [ ! -d "${TMPDIR}" ]; then mkdir -p "${TMPDIR}"; fi
 	        if [ -f "${TMPDIR}/Packages.xz" ]; then rm "${TMPDIR}/Packages.xz"; fi
         	curl -s "$INDEX" -o "${TMPDIR}/Packages.xz"
+	;;
+
+	info)
+		echo Information...
+		echo Available Fonts: $(fnt search | wc -l)
 	;;
 
 	list|-l)
