@@ -139,3 +139,15 @@ Create your own with http://shell.aiei.ch/typography/
 # Missing a font?
 
 Feel free to create an issue, if the font comes with sources and its license is DFSG compliant, I'm happy to package it for a dollar. Free if I like it.
+
+# Some interesting links
+
+[Helvetica in Motion](https://www.youtube.com/watch?v=R1ZBknDPlu4)
+
+https://github.com/fcambus/bdf2sfd (convert bitmap fonts to vector fonts)
+
+https://github.com/rewtnull/amigafonts (Amiga)
+
+https://github.com/alexmyczko/ree (dump your video card ROM, and extract the bitmap fonts)
+
+[Paul Renner and his font Futura](https://www.maroverlag.de/typo/84-die-kunst-der-typographie-9783875124149.html)
