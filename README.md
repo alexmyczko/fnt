@@ -11,6 +11,8 @@ If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject
 
 Read more about [Google Web Fonts](https://uxdesign.cc/a-privacy-concern-about-google-fonts-5aa4418bf87e).
 
+Host them yourself, here's [why](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
+
 # Font repositories
 
 [Debian sid](https://packages.debian.org/unstable/fonts/), ~480 fonts available, only those starting with `fonts-`
