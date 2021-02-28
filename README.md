@@ -142,6 +142,14 @@ Create your own with http://shell.aiei.ch/typography/
 
 Feel free to create an issue, if the font comes with sources and its license is DFSG compliant, I'm happy to package it for a dollar. Free if I like it.
 
+# Want to create or edit fonts?
+
+https://trufont.github.io/
+
+https://fontforge.org/en-US/
+
+https://birdfont.org/
+
 # Some interesting links
 
 [Helvetica in Motion](https://www.youtube.com/watch?v=R1ZBknDPlu4)
