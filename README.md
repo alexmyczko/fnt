@@ -152,6 +152,8 @@ https://birdfont.org/
 
 # Advertisement
 
+https://news.ycombinator.com/item?id=26063971
+
 https://fostips.com/fnt-a-command-line-font-manager-for-linux-and-mac-os/
 
 # Some interesting links
