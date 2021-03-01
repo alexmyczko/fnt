@@ -11,7 +11,7 @@ TMPDIR="${TMPDIR:-/tmp}"
 # debian sid index
 INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
-GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/ofl/"
+GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
 s=$(uname -s)
@@ -119,16 +119,20 @@ case "$1" in
 		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
 
         	if [ -z "$p" ]; then
-		    q=$(curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
+		    q=$(curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
+		    s=$(curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
 
-		    if [ -z "$q" ]; then
+		    if [ -z "$q" ] && [ -z "$s" ]; then
         		echo "Font \"$2\" not found"
         		exit 1
 		    else
 			echo "Installing google-${2}"
 			# here comes the google web font installer part using grep '\..tf'
-			curl -s "$GINDEX/${2}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read f; do
-			    curl -g -s "${GINDEX}/${2}/$f" -o "$target/$f"
+			curl -s "$GINDEX/ofl/${2}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read f; do
+			    curl -g -s "${GINDEX}/ofl/${2}/$f" -o "$target/$f"
+			done
+			curl -s "$GINDEX/apache/${2}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read f; do
+			    curl -g -s "${GINDEX}/apache/${2}/$f" -o "$target/$f"
 			done
 			exit 0
 		    fi
@@ -155,7 +159,8 @@ case "$1" in
 	;;
 	search|-s)
 		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
-		curl -s "$GINDEX" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
+		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
+		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
