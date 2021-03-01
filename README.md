@@ -23,8 +23,7 @@ Host them yourself, here's [why](https://wicki.io/posts/2020-11-goodbye-google-f
 # Installation
 
 ```
-cp fnt /usr/bin
-chmod +x /usr/bin/fnt
+make install
 ```
 
 # Usage

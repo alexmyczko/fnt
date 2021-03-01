@@ -4,7 +4,6 @@
 # alex@aiei.ch
 #
 # FIXME as user it installs to user directories, as root it installs system wide
-# TODO tested and usable for linux and macOS
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
 TMPDIR="${TMPDIR:-/tmp}"
