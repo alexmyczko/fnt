@@ -10,13 +10,8 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-build
 BuildArch:	noarch
 
 %description
-This software simplifies the task of backing up the system
-configuration files (those under /etc) for UNIX systems
-(Solaris, *BSD, Linux). You can run the program from any directory
-and it will by default save the (maybe compressed) tarball to /root.
-.
-It is possible to encrypt the tarball, to upload the tarball to some
-other host and run the backup automated in a cronjob.
+Search, preview, and download more than 1800 fonts as user. It can download
+fonts from Debian sid and Google Web fonts repositories.
        
 %prep
 %setup
@@ -27,17 +22,14 @@ other host and run the backup automated in a cronjob.
 [ -d %{buildroot} -a "%{buildroot}" != "" ] && rm -rf  %{buildroot}
 
 make DESTDIR=%{buildroot} MANDIR=%{buildroot}%{_mandir} install
-make DESTDIR=%{buildroot} install-config
 
 %clean
 [ -d %{buildroot} -a "%{buildroot}" != "" ] && rm -rf  %{buildroot}
 
 %files
 %defattr(-, root, root)
-%doc COPYING changelog *.html *.png *.jpg
-%{_bindir}/ibackup
-%{_bindir}/sysconf
-%config /etc/ibackup.conf
+%doc LICENSE README.md
+%{_bindir}/fnt
 %{_mandir}/man1/*
 
 %changelog
