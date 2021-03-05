@@ -27,6 +27,12 @@ case "$s" in
 		check="curl chafa otfinfo"
 		i="apt"
 		target="$HOME/.fonts/"
+		# if root user installs we install it system wide, but we don't care if it's opentype or truetype
+		# feel free to fix with pull request
+		if [ 0 -eq `id -u` ]; then
+        		target="/usr/share/fonts/truetype/"
+			mkdir -p $target
+    		fi
 	;;
 	FreeBSD)
 		#echo FreeBSD
