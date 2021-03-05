@@ -164,6 +164,8 @@ https://github.com/fcambus/bdf2sfd (convert bitmap fonts to vector fonts)
 
 https://github.com/rewtnull/amigafonts (Amiga)
 
+https://www.trueschool.se (More Amiga)
+
 https://github.com/alexmyczko/ree (dump your video card ROM, and extract the bitmap fonts)
 
 [Paul Renner and his font Futura](https://www.maroverlag.de/typo/84-die-kunst-der-typographie-9783875124149.html)
