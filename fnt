@@ -5,12 +5,50 @@
 #
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
-TMPDIR="${TMPDIR:-/tmp}"
+#TMPDIR="${TMPDIR:-/tmp}"
+TMPDIR="${HOME}/.fnt"
 # debian sid index
 INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
 GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
 MIRROR="http://ftp.ch.debian.org/debian/"
+
+mkspecimen () {
+    # mkspecimen font-normal font-italic color-light color-dark fontname text outputfile
+    #            $1          $2          $3          $4         $5       $6   $7
+
+    #if [ 'x' = 'x'"$1" ]; then
+    #	echo "Syntax: mkspecimen font-normal font-italic color-light color-dark fontname text"
+    #   echo
+    #	exit 1
+    #fi
+
+    convert \
+    -size 396x486 \
+    xc:'#'${3} \
+    -font ${1} \
+    -pointsize 60 \
+    -draw 'fill #'${4}' rectangle 0,486 486,300' \
+    -fill black \
+    -annotate +20+74 "${5}" \
+    -annotate +20+140 "Aa Ee Rr" \
+    -font ${2} \
+    -annotate +20+205 "Bb Gg Jj" \
+    -font ${1} \
+    -pointsize 60 \
+    -annotate +20+270 "${6}" \
+    -fill white \
+    -pointsize 50 \
+    -annotate +20+456 "0123456789" \
+    -pointsize 130 \
+    -annotate +285+200 "A" \
+    -fill black \
+    -pointsize 40 \
+    -annotate +20+350 "abcdefghijklm" \
+    -annotate +20+395 "nopqrstuvwxyz" \
+    ${7}
+    #-kerning 4 \
+}
 
 s=$(uname -s)
 case "$s" in
@@ -26,10 +64,8 @@ case "$s" in
 		check="curl chafa otfinfo"
 		i="apt"
 		target="$HOME/.fonts/"
-		# if root user installs we install it system wide, but we don't care if it's opentype or truetype
-		# feel free to fix with pull request
 		if [ 0 -eq `id -u` ]; then
-        		target="/usr/share/fonts/truetype/"
+        		target="/usr/local/share/fonts/"
 			mkdir -p $target
     		fi
 	;;
@@ -105,7 +141,9 @@ case "$1" in
 		downsize=$(echo "$p" | awk '{print $NF}')
 		url=$(echo "$p" | awk '{print $(NF-2)}')
 		d=$(echo "$p" | sed s,.*Description:\ ,, | sed s,\ Homepage:.*,,)
+		h=$(echo "$p" | sed s,.*Homepage:\ ,, | sed s,\ Filename:.*,,)
 		echo "$d [$ver D:$downsize I:${instsize}000]"
+		echo "$h"
 	;;
 	install|-i)
 		if [ ! -f "${TMPDIR}/Packages.xz" ]; then
