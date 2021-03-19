@@ -121,6 +121,10 @@ https://fontforge.org/en-US/
 
 https://birdfont.org/
 
+# Serve fonts on the web as woff2 and save a lot of traffic
+
+https://github.com/google/woff2
+
 # Advertisement
 
 https://news.ycombinator.com/item?id=26063971
