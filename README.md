@@ -139,6 +139,8 @@ https://wakamaifondue.com
 
 https://github.com/fcambus/bdf2sfd (convert bitmap fonts to vector fonts)
 
+https://en.wikipedia.org/wiki/Computer_font
+
 https://github.com/rewtnull/amigafonts (Amiga)
 
 https://www.trueschool.se (More Amiga)
