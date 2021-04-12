@@ -133,7 +133,8 @@ case "$1" in
 	preview|-p)
 		# echo Previewing...
 		curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"
-		chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
+		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
+		chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
 		p=$(unxz -c "$HOME/.fnt/Packages.xz" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
 		name=$(echo "$p" | awk '{print $2}')
 		ver=$(echo "$p" | awk '{print $4}')
