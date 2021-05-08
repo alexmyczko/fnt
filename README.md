@@ -12,7 +12,7 @@ If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject
 
 Read more about [Google Fonts](https://uxdesign.cc/a-privacy-concern-about-google-fonts-5aa4418bf87e) and [their FAQ](https://developers.google.com/fonts/faq#what_does_using_the_google_fonts_api_mean_for_the_privacy_of_my_users).
 
-Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/), if you already use a CDN.
+Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
 
 # Font repositories
 
