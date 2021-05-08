@@ -10,9 +10,9 @@ If you run [macOS](https://www.next.com), neither [fink](https://www.finkproject
 
 # Privacy?
 
-Read more about [Google Web Fonts](https://uxdesign.cc/a-privacy-concern-about-google-fonts-5aa4418bf87e).
+Read more about [Google Fonts](https://uxdesign.cc/a-privacy-concern-about-google-fonts-5aa4418bf87e) and [their FAQ](https://developers.google.com/fonts/faq#what_does_using_the_google_fonts_api_mean_for_the_privacy_of_my_users).
 
-Host them yourself, here's [why](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
+Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
 
 # Font repositories
 
