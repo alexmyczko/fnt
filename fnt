@@ -50,7 +50,12 @@ mkspecimen () {
     #-kerning 4 \
 }
 
-s=$(uname -s)
+if ! which uname >/dev/null; then
+	s="Windows"
+else
+	s=$(uname -s)
+fi
+
 case "$s" in
 	Darwin)
 		#echo macOS
@@ -80,6 +85,12 @@ case "$s" in
 		check="curl"
 		i="pkgman"
 		target="$HOME/config/non-packaged/data/fonts/"
+	;;
+	Windows)
+		#echo Windows
+		check="cmd.exe"
+		i="echo"
+		target="$USERPROFILE\\Fonts"
 	;;
 	*)
 		echo "Please report $s to https://github.com/alexmyczko/fnt/issues"
