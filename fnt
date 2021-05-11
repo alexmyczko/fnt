@@ -89,7 +89,8 @@ case "$s" in
 	Windows)
 		#echo Windows
 		check="cmd.exe"
-		i="echo"
+		alias which="where"
+		i="ENOPKGMANAGER"
 		target="$USERPROFILE\\Fonts"
 	;;
 	*)
