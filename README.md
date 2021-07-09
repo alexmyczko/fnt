@@ -1,4 +1,14 @@
-![fnt](fnt.png?raw=true "fnt")
+<!-- ![fnt](fnt.png?raw=true "fnt") -->
+```
+   .d888
+  d88P"           888
+  888             888
+.d88888 88888b. d888888
+  888   888 "88b  888
+  888   888  888  888
+  888   888  888  Y88b.
+  888   888  888   "Y888
+```
 
 apt for fonts, the missing font manager for macOS/linux
 
