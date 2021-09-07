@@ -1,6 +1,6 @@
 BINDIR=/usr/bin
 MANDIR=/usr/share/man
-VERSION=1.1
+VERSION=1.3
 
 all:
 	@echo make install          to install the software
