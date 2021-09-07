@@ -1,6 +1,6 @@
 Summary: 	Font manager command line tool
 Name: 		fnt
-Version: 	1.1
+Version: 	1.3
 Release: 	1
 License: 	MIT
 Group:		System/Utilities
