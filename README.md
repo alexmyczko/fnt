@@ -1,5 +1,6 @@
 <!-- ![fnt](fnt.png?raw=true "fnt") -->
-```
+
+```shell-session
    .d888
   d88P"           888
   888             888
@@ -30,15 +31,43 @@ Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
 
 [Google fonts](https://github.com/google/fonts), ~1280 fonts available, (`google-` prefixed)
 
+# Requirements
+
+## macOS
+
+```sh
+# lcdf-typetools for otfinfo
+curl brew chafa lcdf-typetools
+```
+
+## Linux, FreeBSD
+
+```sh
+# lcdf-typetools for otfinfo
+curl chafa lcdf-typetools
+```
+
+## Haiku OS
+
+```console
+curl
+```
+
+## Windows
+
+```console
+cmd.exe
+```
+
 # Installation
 
-```
+```shell
 make install
 ```
 
 # Usage
 
-```
+```shell
 $ fnt update
 
 $ fnt search agave
