@@ -1,20 +1,42 @@
 #compdef fnt
 
-_fnt() {
-    _arguments \
-        "-u[updates the font package index of debian sid]" \
-        "-l[lists installed fonts with glyphcount per font]" \
-        "-i[install a font]" \
-        "-r[remove a font]" \
-        "-s[search for font]"
+_arguments \
+    "1: :->mode" \
+    "2: :->fonts"
 
+case $state in
+mode)
     _values \
-        "mode" \
-        "update[updates the font package index of debian sid]" \
-        "list[lists installed fonts with glyphcount per font]" \
-        "info[information about how many fonts can be installed]" \
-        "install[install a font]" \
-        "remove[remove a font]" \
-        "preview[preview a font]" \
-        "search[search for font]"
-}
+        $state \
+        {update,-u}"[updates the font package index of debian sid]" \
+        {list,-l}"[lists installed fonts with glyphcount per font]" \
+        info"[information about how many fonts can be installed]" \
+        {install,-i}"[install a font]" \
+        {remove,-r}"[remove a font]" \
+        {preview,-p}"[preview a font]" \
+        {search,-s}"[search for font]"
+    ;;
+
+fonts)
+    subcmd=${words[2]}
+
+    case $subcmd in
+    update | info | search) ;;
+    remove)
+        local -a installed
+        if [ "$(fnt list)" != "" ]; then
+            installed=("$(fnt list)")
+            _values \
+                "installed" $installed
+        fi
+        ;;
+    *)
+        local -a fonts
+        fonts=($(fnt search))
+        _values \
+            "fonts" $fonts
+        ;;
+    esac
+    ;;
+
+esac
