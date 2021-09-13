@@ -1,0 +1,20 @@
+#compdef fnt
+
+_fnt() {
+    _arguments \
+        "-u[updates the font package index of debian sid]" \
+        "-l[lists installed fonts with glyphcount per font]" \
+        "-i[install a font]" \
+        "-r[remove a font]" \
+        "-s[search for font]"
+
+    _values \
+        "mode" \
+        "update[updates the font package index of debian sid]" \
+        "list[lists installed fonts with glyphcount per font]" \
+        "info[information about how many fonts can be installed]" \
+        "install[install a font]" \
+        "remove[remove a font]" \
+        "preview[preview a font]" \
+        "search[search for font]"
+}
