@@ -1,0 +1,42 @@
+#compdef fnt
+
+_arguments \
+    "1: :->mode" \
+    "2: :->fonts"
+
+case $state in
+mode)
+    _values \
+        $state \
+        {update,-u}"[updates the font package index of debian sid]" \
+        {list,-l}"[lists installed fonts with glyphcount per font]" \
+        info"[information about how many fonts can be installed]" \
+        {install,-i}"[install a font]" \
+        {remove,-r}"[remove a font]" \
+        {preview,-p}"[preview a font]" \
+        {search,-s}"[search for font]"
+    ;;
+
+fonts)
+    subcmd=${words[2]}
+
+    case $subcmd in
+    update | info | search) ;;
+    remove)
+        local -a installed
+        if [ "$(fnt list)" != "" ]; then
+            installed=("$(fnt list)")
+            _values \
+                "installed" $installed
+        fi
+        ;;
+    *)
+        local -a fonts
+        fonts=($(fnt search))
+        _values \
+            "fonts" $fonts
+        ;;
+    esac
+    ;;
+
+esac
