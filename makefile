@@ -19,6 +19,7 @@ install:
 uninstall:
 	rm -f $(DESTDIR)/$(BINDIR)/fnt
 	rm -f $(DESTDIR)/$(MANDIR)/man1/fnt.1.gz
+	rm -f $(DESTDIR)/$(ZCOMPDIR)/_fnt
 
 clean:
 	@echo nothing to clean
