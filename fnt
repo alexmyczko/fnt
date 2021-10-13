@@ -168,8 +168,8 @@ install | -i)
 	if [ ! -d "${target}" ]; then
 		mkdir -p "${target}"
 	fi
-	# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
-	# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
+	# cat ${TMPDIR}/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
+	# cat ${TMPDIR}/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
 	p=$(unxz -c "$TMPDIR/Packages.xz" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:" | awk '!NF{print line; line=""}{line=line " " $0}' | grep "Package: fonts-" | grep "fonts-$2" | head -1)
 	# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
 
