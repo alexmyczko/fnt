@@ -5,8 +5,8 @@
 #
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
-#TMPDIR="${TMPDIR:-/tmp}"
-TMPDIR="${HOME}/.fnt"
+TMPDIR="${TMPDIR:-/tmp/fnt}"
+#TMPDIR="${HOME}/.fnt"
 # debian sid index
 INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
@@ -213,7 +213,7 @@ case "$1" in
 		echo "Feel free to send patches or dollars (see the sponsor link)"
 	;;
 	search|-s)
-		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+		unxz -c "$TMPDIR/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
 		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 	;;
