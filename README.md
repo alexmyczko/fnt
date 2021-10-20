@@ -107,6 +107,15 @@ You end up with ~2700 font files (~480 fonts), taking up 1.6 GB.
 
 You end up with ~4200 font files (~1200 fonts), taking up 1.4 GB.
 
+# ZSH autocompletion
+
+You might want to add something like this to your `.zshrc`:
+```
+# enable autocomplete function
+autoload -U compinit
+compinit
+```
+
 # Thanks
 
 The preview mode works using https://github.com/hpjansson/chafa and https://screenshots.debian.net
