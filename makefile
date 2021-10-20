@@ -6,7 +6,6 @@ VERSION=1.3
 all:
 	@echo make install          to install the software
 	@echo make uninstall        to remove the software
-	@echo make rpm		    to create a .rpm
 
 install:
 	if test ! -d $(DESTDIR)/$(BINDIR) ; then mkdir -p $(DESTDIR)/$(BINDIR) ; fi
@@ -26,9 +25,3 @@ clean:
 
 release:
 	cd .. ; tar cf fnt-$(VERSION).tar --exclude-vcs fnt ; xz -9f fnt-$(VERSION).tar
-
-rpm:
-	mkdir -p /usr/src/rpm/SOURCES/
-	mkdir -p /usr/src/rpm/BUILD
-	cp ../fnt-${VERSION}.tar.gz /usr/src/rpm/SOURCES/
-	rpm -bb fnt.spec
