@@ -220,6 +220,10 @@ case "$1" in
 	moo)
 		echo "This fnt does not have cow powers."
 	;;
+	wak)
+		echo ' _()< wak wak'
+		echo '(__)'
+	;;
 	*)
 		echo "Nothing..."
 	;;
