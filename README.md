@@ -105,7 +105,7 @@ You end up with ~2700 font files (~480 fonts), taking up 1.6 GB.
 
 `for a in $(fnt search |grep ^google- |sed s,google-,,); do fnt install $a; done`
 
-You end up with ~4200 font files (~1200 fonts), taking up 1.4 GB.
+You end up with ~4200 font files (~1420 fonts), taking up 1.4 GB.
 
 # ZSH autocompletion
 
