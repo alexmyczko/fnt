@@ -150,6 +150,8 @@ https://news.ycombinator.com/item?id=26063971
 
 https://fostips.com/fnt-a-command-line-font-manager-for-linux-and-mac-os/
 
+https://www.basher.it/package/
+
 # Some interesting links
 
 [Helvetica in Motion](https://www.youtube.com/watch?v=R1ZBknDPlu4)
