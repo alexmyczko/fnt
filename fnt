@@ -100,7 +100,7 @@ case "$s" in
 esac
 
 for a in $check; do
-    if ! which "$a" >/dev/null; then
+    if ! which "$a" &>/dev/null; then
         echo "$a not found, please use $i to install it."
         exit 1
     fi
