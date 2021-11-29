@@ -64,7 +64,7 @@ case "$s" in
 		i="brew"
 		target="$HOME/Library/Fonts/"
 	;;
-	Linux|GNU/kFreeBSD)
+	Linux|GNU/kFreeBSD|GNU)
 		#echo Linux
 		check="curl chafa otfinfo"
 		i="apt"
