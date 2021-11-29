@@ -1,4 +1,3 @@
-<!-- ![fnt](fnt.png?raw=true "fnt") -->
 ```
    .d888
   d88P"           888
