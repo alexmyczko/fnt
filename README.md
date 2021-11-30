@@ -96,6 +96,10 @@ agave-b-autohinted.ttf [699]
 agave-r-autohinted.ttf [2443]
 ```
 
+Randomly display a preview every ten seconds:
+
+`while (clear); do fnt preview $(fnt search | shuf -n1 | sed s,......-,,); sleep 10; done`
+
 If you want to install all available fonts, you could run something like this:
 
 `for a in $(fnt search |grep ^fonts- |sed s,fonts-,,); do fnt install $a; done`
