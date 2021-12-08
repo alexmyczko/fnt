@@ -202,7 +202,7 @@ case "$1" in
 		downsize=$(echo "$p" | awk '{print $NF}')
 		url=$(echo "$p" | awk '{print $(NF-2)}')
 		f=$(basename "$url")
-		echo "Installing fonts-${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}${url}]..."
+		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}${url}]..."
 		curl -s "${MIRROR}${url}" -o "${TMPDIR}/$f"
 		cd "${TMPDIR}" || exit 1
 		ar x "$f"
