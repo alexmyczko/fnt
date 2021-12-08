@@ -13,43 +13,6 @@ INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
-mkspecimen () {
-    # mkspecimen font-normal font-italic color-light color-dark fontname text outputfile
-    #            $1          $2          $3          $4         $5       $6   $7
-
-    #if [ 'x' = 'x'"$1" ]; then
-    #	echo "Syntax: mkspecimen font-normal font-italic color-light color-dark fontname text"
-    #   echo
-    #	exit 1
-    #fi
-
-    convert \
-    -size 396x486 \
-    xc:'#'${3} \
-    -font ${1} \
-    -pointsize 60 \
-    -draw 'fill #'${4}' rectangle 0,486 486,300' \
-    -fill black \
-    -annotate +20+74 "${5}" \
-    -annotate +20+140 "Aa Ee Rr" \
-    -font ${2} \
-    -annotate +20+205 "Bb Gg Jj" \
-    -font ${1} \
-    -pointsize 60 \
-    -annotate +20+270 "${6}" \
-    -fill white \
-    -pointsize 50 \
-    -annotate +20+456 "0123456789" \
-    -pointsize 130 \
-    -annotate +285+200 "A" \
-    -fill black \
-    -pointsize 40 \
-    -annotate +20+350 "abcdefghijklm" \
-    -annotate +20+395 "nopqrstuvwxyz" \
-    ${7}
-    #-kerning 4 \
-}
-
 if ! which uname >/dev/null; then
 	s="Windows"
 else
