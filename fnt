@@ -153,16 +153,6 @@ case "$1" in
                   curl -L -s "https://bootes.ethz.ch/fonts/$2/preview.png" -o "${TMPDIR}/preview.png"
 		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
 		chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
-		p=$(unxz -c "$HOME/.fnt/Packages.xz" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
-		name=$(echo "$p" | awk '{print $2}')
-		ver=$(echo "$p" | awk '{print $4}')
-		instsize=$(echo "$p" | awk '{print $6}')
-		downsize=$(echo "$p" | awk '{print $NF}')
-		url=$(echo "$p" | awk '{print $(NF-2)}')
-		d=$(echo "$p" | sed s,.*Description:\ ,, | sed s,\ Homepage:.*,,)
-		h=$(echo "$p" | sed s,.*Homepage:\ ,, | sed s,\ Filename:.*,,)
-		echo "$d [$ver D:$downsize I:${instsize}000]"
-		echo "$h"
 	;;
 	install|-i)
 		if [ ! -f "${TMPDIR}/Packages.xz" ]; then
