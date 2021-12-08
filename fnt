@@ -13,7 +13,7 @@ INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
-if ! which uname >/dev/null; then
+if ! which uname &>/dev/null; then
 	s="Windows"
 else
 	s=$(uname -s)
