@@ -62,12 +62,14 @@ case "$s" in
 		check="curl brew otfinfo chafa"
 		# otfinfo comes with lcdf-typetools
 		i="brew"
+		md5="md5"
 		target="$HOME/Library/Fonts/"
 	;;
 	Linux|GNU/kFreeBSD|GNU)
 		#echo Linux
 		check="curl chafa otfinfo"
 		i="apt"
+		md5="md5sum"
 		target="$HOME/.fonts/"
 		if [ 0 -eq `id -u` ]; then
         		target="/usr/local/share/fonts/"
@@ -78,6 +80,7 @@ case "$s" in
 		#echo FreeBSD
 		check="curl chafa otfinfo"
 		i="pkg"
+		md5="md5"
 		target="$HOME/.fonts/"
 	;;
 	Haiku)
@@ -145,8 +148,8 @@ case "$1" in
 	preview|-p)
 		# echo Previewing...
 		curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"
-		md5=$(md5sum ${TMPDIR}/preview.png)
-                echo $md5 |grep b5765b390157e36eaf721c8848a4b04d >/dev/null &&
+		md5s=$($md5 ${TMPDIR}/preview.png)
+                echo $md5s |grep b5765b390157e36eaf721c8848a4b04d >/dev/null &&
                   curl -L -s "https://bootes.ethz.ch/fonts/$2/preview.png" -o "${TMPDIR}/preview.png"
 		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
 		chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
