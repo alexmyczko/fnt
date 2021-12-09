@@ -32,7 +32,7 @@ fonts)
         ;;
     *)
         local -a fonts
-        fonts=($(fnt search))
+        fonts=($(fnt search |sed s,google-,, | sed s,fonts-,,))
         _values \
             "fonts" $fonts
         ;;
