@@ -35,6 +35,8 @@ Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
 make install
 ```
 
+You can also use your native package manager, see https://repology.org/project/fnt/versions
+
 # Usage
 
 ```
