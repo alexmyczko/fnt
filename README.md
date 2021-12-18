@@ -129,7 +129,7 @@ Create your own with http://shell.aiei.ch/typography/
 
 # Online service
 
-http://bootes.ethz.ch/fonts/
+https://bootes.ethz.ch/fonts/
 
 # Missing a font?
 
