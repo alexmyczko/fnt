@@ -11,6 +11,8 @@
 
 apt for fonts, the missing font manager for macOS/linux
 
+[![Packaging status](https://repology.org/badge/tiny-repos/fnt.svg)](https://repology.org/project/fnt/versions)
+
 # Why?
 
 If you run [Debian](https://www.debian.org) stable, you don't get the latest fonts, unless someone backports them actively. So this is useful to just get the latest and greatest fonts from Debian sid. It gets even worse with non Debian based Linux distributions.
