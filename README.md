@@ -27,9 +27,9 @@ Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
 
 # Font repositories
 
-[Debian sid](https://packages.debian.org/unstable/fonts/), ~490 fonts available, only those starting with `fonts-`
+[Debian sid](https://packages.debian.org/unstable/fonts/), ~500 fonts available, only those starting with `fonts-`
 
-[Google fonts](https://github.com/google/fonts), ~1570 fonts available, (`google-` prefixed)
+[Google fonts](https://github.com/google/fonts), ~1600 fonts available, (`google-` prefixed)
 
 # Installation
 
@@ -107,11 +107,11 @@ If you want to install all available fonts, you could run something like this:
 
 `for a in $(fnt search |grep ^fonts- |sed s,fonts-,,); do fnt install $a; done`
 
-You end up with ~2700 font files (~490 fonts), taking up 1.6 GB.
+You end up with ~2700 font files (~500 fonts), taking up 1.6 GB.
 
 `for a in $(fnt search |grep ^google- |sed s,google-,,); do fnt install $a; done`
 
-You end up with ~4200 font files (~1570 fonts), taking up 1.4 GB.
+You end up with ~4200 font files (~1600 fonts), taking up 1.4 GB.
 
 # ZSH autocompletion
 
