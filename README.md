@@ -132,6 +132,7 @@ Create your own with http://shell.aiei.ch/typography/
 
 # Online service
 
+Currently offline.
 http://bootes.ethz.ch/fonts/
 
 # Missing a font?
@@ -170,7 +171,7 @@ https://en.wikipedia.org/wiki/Computer_font
 
 https://github.com/rewtnull/amigafonts (Amiga)
 
-https://www.trueschool.se (More Amiga)
+[https://www.trueschool.se](http://web.archive.org/web/20221003112339/https://trueschool.se/) (More Amiga)
 
 https://github.com/alexmyczko/ree (dump your video card ROM, and extract the bitmap fonts)
 
