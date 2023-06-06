@@ -132,8 +132,7 @@ Create your own with http://shell.aiei.ch/typography/
 
 # Online service
 
-Currently offline.
-http://bootes.ethz.ch/fonts/
+http://sid.ethz.ch/fonts/
 
 # Missing a font?
 
