@@ -113,7 +113,7 @@ case "$1" in
 		curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"
 		md5s=$($md5 ${TMPDIR}/preview.png)
                 echo $md5s |grep b5765b390157e36eaf721c8848a4b04d >/dev/null &&
-                  curl -L -s "https://bootes.ethz.ch/fonts/$2/preview.png" -o "${TMPDIR}/preview.png"
+                  curl -L -s "https://sid.ethz.ch/fonts/$2/preview.png" -o "${TMPDIR}/preview.png"
 		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
 		chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
 	;;
