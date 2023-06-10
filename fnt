@@ -72,7 +72,7 @@ for a in $check; do
     fi
 done
 
-if [ "${1}x" = 'x' ]; then
+if [ -z "$1" ]; then
 	echo "Syntax: fnt [ update | list | info ]"
 	echo "        fnt [ install | remove | preview | search ] font"
 	echo
