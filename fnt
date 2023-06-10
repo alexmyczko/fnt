@@ -13,7 +13,7 @@ INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
-if ! which uname &>/dev/null; then
+if ! command -v uname &>/dev/null; then
 	s="Windows"
 else
 	s=$(uname -s)
@@ -55,7 +55,6 @@ case "$s" in
 	Windows)
 		#echo Windows
 		check="cmd.exe"
-		alias which="where"
 		i="ENOPKGMANAGER"
 		target="$USERPROFILE\\Fonts"
 	;;
@@ -66,7 +65,7 @@ case "$s" in
 esac
 
 for a in $check; do
-    if ! which "$a" &>/dev/null; then
+    if ! command -v "$a" &>/dev/null; then
         echo "$a not found, please use $i to install it."
         exit 1
     fi
