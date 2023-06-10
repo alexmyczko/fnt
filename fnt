@@ -89,7 +89,7 @@ fi
 case "$1" in
 	update|-u)
 		echo Updating...
-		if [ ! -d "${TMPDIR}" ]; then mkdir -p "${TMPDIR}"; fi
+		mkdir -p "${TMPDIR}"
 	        if [ -f "${TMPDIR}/Packages.xz" ]; then rm "${TMPDIR}/Packages.xz"; fi
         	curl -s "$INDEX" -o "${TMPDIR}/Packages.xz"
 	;;
@@ -109,6 +109,7 @@ case "$1" in
 	;;
 	preview|-p)
 		# echo Previewing...
+		mkdir -p "${TMPDIR}"
 		curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"
 		md5s=$($md5 ${TMPDIR}/preview.png)
                 echo $md5s |grep b5765b390157e36eaf721c8848a4b04d >/dev/null &&
