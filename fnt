@@ -13,7 +13,7 @@ INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
 MIRROR="http://ftp.ch.debian.org/debian/"
 
-if ! which uname &>/dev/null; then
+if ! command -v uname &>/dev/null; then
 	s="Windows"
 else
 	s=$(uname -s)
@@ -55,7 +55,6 @@ case "$s" in
 	Windows)
 		#echo Windows
 		check="cmd.exe"
-		alias which="where"
 		i="ENOPKGMANAGER"
 		target="$USERPROFILE\\Fonts"
 	;;
@@ -66,13 +65,13 @@ case "$s" in
 esac
 
 for a in $check; do
-    if ! which "$a" &>/dev/null; then
+    if ! command -v "$a" &>/dev/null; then
         echo "$a not found, please use $i to install it."
         exit 1
     fi
 done
 
-if [ "${1}x" = 'x' ]; then
+if [ -z "$1" ]; then
 	echo "Syntax: fnt [ update | list | info ]"
 	echo "        fnt [ install | remove | preview | search ] font"
 	echo
@@ -90,7 +89,7 @@ fi
 case "$1" in
 	update|-u)
 		echo Updating...
-		if [ ! -d "${TMPDIR}" ]; then mkdir -p "${TMPDIR}"; fi
+		mkdir -p "${TMPDIR}"
 	        if [ -f "${TMPDIR}/Packages.xz" ]; then rm "${TMPDIR}/Packages.xz"; fi
         	curl -s "$INDEX" -o "${TMPDIR}/Packages.xz"
 	;;
@@ -110,6 +109,7 @@ case "$1" in
 	;;
 	preview|-p)
 		# echo Previewing...
+		mkdir -p "${TMPDIR}"
 		curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"
 		md5s=$($md5 ${TMPDIR}/preview.png)
                 echo $md5s |grep b5765b390157e36eaf721c8848a4b04d >/dev/null &&
