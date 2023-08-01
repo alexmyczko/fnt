@@ -148,7 +148,7 @@ https://birdfont.org/
 
 # But you know this Comic Sans font?
 
-[https://web.archive.org/web/20230119134258/http://www.comicsanscriminal.com/](http://www.comicsanscriminal.com/) Kindly, go fuck yourself.
+[http://www.comicsanscriminal.com/](https://web.archive.org/web/20230119134258/http://www.comicsanscriminal.com/) kindly, go fuck yourself.
 
 # Serve fonts on the web as woff2 and save a lot of traffic
 
