@@ -152,6 +152,8 @@ https://github.com/google/woff2
 
 # Advertisement
 
+https://bits.debian.org/2021/12/2000-fonts-debian.html
+
 https://news.ycombinator.com/item?id=26063971
 
 https://fostips.com/fnt-a-command-line-font-manager-for-linux-and-mac-os/
