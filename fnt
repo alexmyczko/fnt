@@ -172,7 +172,9 @@ case "$1" in
 		echo "Feel free to send patches or dollars (see the sponsor link)"
 	;;
 	search|-s)
-		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+		if [ -f "$HOME/.fnt/Packages.xz" ]; then
+			unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+		fi
 		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 	;;
