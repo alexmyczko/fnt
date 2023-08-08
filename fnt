@@ -161,10 +161,11 @@ case "$1" in
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}${url}]..."
 		curl -s "${MIRROR}${url}" -o "${TMPDIR}/$f"
 		cd "${TMPDIR}" || exit 1
-		ar x "$f"
-		tar xJf data.tar.xz
+		data="$(ar t "$f" | grep data)"
+		ar x "$f" "$data"
+		tar xJf "$data"
 		find "${TMPDIR}" . -name "*.?tf" -exec cp {} "$target" \;
-		rm "$f" control.tar* data.tar* debian-binary
+		rm "$f" "$data"
 		rm -rf "${TMPDIR:?}/usr"
 	;;
 	remove|-r)
