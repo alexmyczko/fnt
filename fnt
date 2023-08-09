@@ -115,6 +115,11 @@ case "$1" in
 		# done
 	;;
 	preview|-p)
+		if [ ! $# -eq 2 ]; then
+			echo "No fontname supplied."
+			echo "Example: ${BASH_SOURCE[0]} preview agave"
+			exit 1
+		fi
 		# echo Previewing...
 		mkdir -p "${TMPDIR}"
 		if curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"; then
@@ -193,7 +198,7 @@ case "$1" in
 	;;
 	search|-s)
 		if [ -f "${PACKAGES}" ]; then
-			unxz -c "${PACKAGES}" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
+			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
 		fi
 		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
