@@ -126,7 +126,7 @@ case "$1" in
 			fi
 		fi
 		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
-		chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
+		#chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
 	;;
 	install|-i)
 		if [ ! -f "${PACKAGES}" ]; then
