@@ -166,21 +166,21 @@ case "$1" in
 
 		# get package infos
 		name="$p"
-		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}/,/^$/" |awk '/^(Version|Installed-Size|Description|Filename|Size): /')"
-		ver=$(echo "$infos" | awk '/^Version: /{print$2}')
-		instsize=$(echo "$infos" | awk '/^Installed-Size: /{print$2}')
-		downsize=$(echo "$infos" | awk '/^Size: /{print$2}')
-		fpath=$(echo "$infos" | awk '/^Filename: /{print$2}')
+		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size): /')"
+		ver="$(echo "$infos" | awk '/^Version: /{print$2}')"
+		instsize="$(echo "$infos" | awk '/^Installed-Size: /{print$2}')"
+		downsize="$(echo "$infos" | awk '/^Size: /{print$2}')"
+		fpath="$(echo "$infos" | awk '/^Filename: /{print$2}')"
 		f="$(basename "$fpath")"
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
 		curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$f"
 		cd "${TMPDIR}" || exit 1
-		data="$(ar t "$f" | grep data)"
+		data="$(ar t "$f" | grep '^data.')"
 		ar x "$f" "$data"
-		tar xJf "$data"
+		tar xf "$data"
 		find "${TMPDIR}" -name "*.?tf" -exec cp {} "$target" \;
 		rm "$f" "$data"
-		rm -rf "${TMPDIR:?}/usr"
+		rm -rf "${TMPDIR:?}/"{usr,etc}
 	;;
 	remove|-r)
 		echo "Removing..."
