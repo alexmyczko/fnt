@@ -122,13 +122,20 @@ case "$1" in
 		fi
 		# echo Previewing...
 		mkdir -p "${TMPDIR}"
+		rm "${TMPDIR}/preview.png"
+		PRINTED=
 		if curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"; then
-			md5s=$($md5 "${TMPDIR}/preview.png")
-			if echo "$md5s" |grep b5765b390157e36eaf721c8848a4b04d >/dev/null; then
+			# if we get nothing / "this picture is not available" pic
+			if [ "$($md5 "${TMPDIR}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
 				if curl -L -s "https://sid.ethz.ch/fonts/$2/preview.png" -o "${TMPDIR}/preview.png"; then
-					chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
+					chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png" 2>/dev/null && PRINTED=1
 				fi
+			else
+				chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png" 2>/dev/null && PRINTED=1
 			fi
+		fi
+		if [ "$PRINTED" != "1" ]; then
+			echo "Couldn't retrieve a preview."
 		fi
 		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
 		#chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
