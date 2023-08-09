@@ -131,8 +131,13 @@ case "$1" in
 	install|-i)
 		if [ ! -f "${PACKAGES}" ]; then
 			echo "Could not find ${PACKAGES}"
-			echo "Please run $0 update"
+			echo "Please run ${BASH_SOURCE[0]} update"
 			# could also just run itself with update...
+			exit 1
+		fi
+		if [ ! $# -eq 2 ]; then
+			echo "No fontname supplied."
+			echo "Example: ${BASH_SOURCE[0]} install agave"
 			exit 1
 		fi
 		if [ ! -d "${target}" ]; then
