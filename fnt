@@ -108,7 +108,7 @@ case "$1" in
 	;;
 
 	list|-l)
-		find "$target" /usr/local/share/fonts -iname '*.?tf' | while read -r f; do
+		find "$target" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null | while read -r f; do
 			echo "$(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
 		done
 	;;
@@ -174,10 +174,10 @@ case "$1" in
 		# get package infos
 		name="$p"
 		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size): /')"
-		ver="$(echo "$infos" | awk '/^Version: /{print$2}')"
-		instsize="$(echo "$infos" | awk '/^Installed-Size: /{print$2}')"
-		downsize="$(echo "$infos" | awk '/^Size: /{print$2}')"
-		fpath="$(echo "$infos" | awk '/^Filename: /{print$2}')"
+		ver="$(awk '/^Version: /{print$2}' <<< "$infos")"
+		instsize="$(awk '/^Installed-Size: /{print$2}' <<< "$infos")"
+		downsize="$(awk '/^Size: /{print$2}' <<< "$infos")"
+		fpath="$(awk '/^Filename: /{print$2}' <<< "$infos")"
 		f="$(basename "$fpath")"
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
 		curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$f"
