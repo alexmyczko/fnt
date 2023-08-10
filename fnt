@@ -105,15 +105,9 @@ case "$1" in
 	;;
 
 	list|-l)
-		# echo Listing...
-		# macOS mainly comes with *.ttc (truetype font collections, that can not be processed by otfinfo)
-		#ls -1 /System/Library/Fonts/*.?tf /usr/share/fonts/*type/*/*.?tf $HOME/Library/Fonts/*.?tf $HOME/.fonts/*.?tf 2>/dev/null | while read f; do
 		find "$target" /usr/local/share/fonts -iname '*.?tf' | while read -r f; do
-			echo "$(basename "${f}") [ $(otfinfo -u "$f" 2>/dev/null | wc -l) ]"
+			echo "$(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
 		done
-		# ls -1 "$HOME"/Library/Fonts/*.?tf "$HOME"/.fonts/*.?tf /usr/local/share/fonts/*.?tf 2>/dev/null | while read f; do
-		# 	echo "$f" [ $(otfinfo -u "$f" 2>/dev/null | wc -l | awk '{print $1}') ] | sed s,.*/,,
-		# done
 	;;
 	preview|-p)
 		if [ ! $# -eq 2 ]; then
@@ -121,7 +115,6 @@ case "$1" in
 			echo "Example: ${BASH_SOURCE[0]} preview agave"
 			exit 1
 		fi
-		# echo Previewing...
 		mkdir -p "${TMPDIR}"
 		rm "${TMPDIR}/preview.png"
 		PRINTED=
@@ -138,14 +131,13 @@ case "$1" in
 		if [ "$PRINTED" != "1" ]; then
 			echo "Couldn't retrieve a preview."
 		fi
-		#chafa --invert -c none --symbols block+border-solid "${TMPDIR}/preview.png"
-		#chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png"
 	;;
 	install|-i)
 		if [ ! -f "${PACKAGES}" ]; then
 			echo "Could not find ${PACKAGES}"
 			echo "Please run ${BASH_SOURCE[0]} update"
 			# could also just run itself with update...
+			# but apt doesn't do that either :)
 			exit 1
 		fi
 		if [ ! $# -eq 2 ]; then
@@ -156,17 +148,11 @@ case "$1" in
 		if [ ! -d "${target}" ]; then
 			mkdir -p "${target}"
 		fi
-		# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
-		# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
-		# p=$(unxz -c "${PACKAGES}" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
 		# look for first font match
 		p="$(unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;exit;}')"
-		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
-
 		if [ -z "$p" ]; then
 			q=$(curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
 			s=$(curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
-
 			if [ -z "$q" ] && [ -z "$s" ]; then
 				echo "Font \"$2\" not found"
 				exit 1
@@ -182,7 +168,6 @@ case "$1" in
 			exit 0
 			fi
 		fi
-
 		# get package infos
 		name="$p"
 		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size): /')"
