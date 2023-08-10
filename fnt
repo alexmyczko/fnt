@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vim autoindent noexpandtab
+# vim: autoindent noexpandtab
 set -e
 
 # APT but only for fonts
@@ -76,17 +76,19 @@ for a in $check; do
 done
 
 if [ -z "$1" ]; then
-	echo "Syntax: fnt [ update | list | info ]"
-	echo "        fnt [ install | remove | preview | search ] font"
-	echo
-	echo "update|-u  updates the font package index of debian sid"
-	echo "list|-l    lists installed fonts with glyphcount per font"
-	echo "info       information about how many fonts can be installed"
-	echo "install|-i install a font"
-	echo "remove|-r  remove a font"
-	echo "preview|-p preview a font"
-	echo "search|-s  search for font"
-	echo
+	cat<< 'EOHELP'
+Syntax: fnt [ update | list | info ]
+        fnt [ install | remove | preview | search ] font
+
+update|-u  updates the font package index of debian sid
+list|-l    lists installed fonts with glyphcount per font
+info       information about how many fonts can be installed
+install|-i install a font
+remove|-r  remove a font
+preview|-p preview a font
+search|-s  search for font
+
+EOHELP
 	exit 0
 fi
 
@@ -158,6 +160,7 @@ case "$1" in
 		# cat $HOME/.fnt/Packages.xz |unxz|grep "^Package:\|^Homepage:\|^Size:\|^Installed-Size:\|^Description:"
 		# cat $HOME/.fnt/Packages.xz |unxz| awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"
 		# p=$(unxz -c "${PACKAGES}" | grep -v "^Architecture:\|^Section:\|^Priority:\|^Replaces:\|^Provides:\|^Brekas:\|^Maintainer:\|^MD5sum:\|^Source:\|^Breaks:\|^Multi-Arch:\|^Description-\|^Tag:\|^SHA256:"|awk '!NF{print line; line=""}{line=line " " $0}' |grep "Package: fonts-"|grep "fonts-$2"|head -1)
+		# look for first font match
 		p="$(unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;exit;}')"
 		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
 
