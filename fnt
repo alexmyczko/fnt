@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # vim: autoindent noexpandtab
 set -e
+#set -u
+#set -o pipefail
+#set -x
 
 # APT but only for fonts
 # alex@aiei.ch
@@ -15,7 +18,7 @@ PACKAGES="${TMPDIR}/Packages.xz"
 MIRROR="http://deb.debian.org/debian"
 INDEX="${MIRROR}/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
-GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master/"
+GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master"
 
 if ! command -v uname &>/dev/null; then
 	s="Windows"
@@ -110,7 +113,7 @@ case "$1" in
 		done
 	;;
 	preview|-p)
-		if [ ! $# -eq 2 ]; then
+		if [ $# -ne 2 ]; then
 			echo "No fontname supplied."
 			echo "Example: ${BASH_SOURCE[0]} preview agave"
 			exit 1
@@ -194,8 +197,8 @@ case "$1" in
 		if [ -f "${PACKAGES}" ]; then
 			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
 		fi
-		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
-		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
+		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
