@@ -182,7 +182,7 @@ case "$1" in
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
 		curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$f"
 		cd "${TMPDIR}" || exit 1
-		data="$(ar t "$f" | grep '^data.')"
+		data="$(ar t "$f" | grep '^data\.')"
 		ar x "$f" "$data"
 		tar xf "$data"
 		find "${TMPDIR}" -name "*.?tf" -exec cp {} "$target" \;
