@@ -173,7 +173,10 @@ case "$1" in
 		fi
 		# retrive font from debian mirror
 		TMPDIR="$(mktemp -d)"
+		chmod go-rwx "${TMPDIR}"
 		trap 'rm -rf -- "$TMPDIR"' EXIT
+		PIT="${TMPDIR}/extract"
+		mkdir -m go-rwx "${PIT}" || { echo "Couldn't eat tartar." ; exit 1 ; }
 		name="$p"
 		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
 		ver="$(awk '/^Version: /{print$2}' <<< "$infos")"
@@ -189,8 +192,9 @@ case "$1" in
 		if ${md5} -c "${TMPDIR}/${fname}.md5" >/dev/null; then
 			data="$(ar t "$fname" | grep '^data\.tar')"
 			ar x "${TMPDIR}/$fname" "$data"
+			cd "${PIT}" || { echo "Couldn't munch any tartar in: ${PIT}" ; exit 1 ; }
 			tar xf "${TMPDIR}/$data"
-			find "${TMPDIR}" -name "*.?tf" -exec cp {} "$target" \;
+			find "${PIT}" -name "*.?tf" -exec cp {} "$target" \;
 		else
 			echo "Can't verify md5sum!"
 			exit 1
