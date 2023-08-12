@@ -10,9 +10,9 @@ set -e
 #
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
-#TMPDIR="${TMPDIR:-/tmp}"
-TMPDIR="${HOME}/.fnt"
-PACKAGES="${TMPDIR}/Packages.xz"
+#CACHEDIR="${CACHEDIR:-/tmp}"
+CACHEDIR="${HOME}/.fnt"
+PACKAGES="${CACHEDIR}/Packages.xz"
 # debian sid index
 #INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 MIRROR="http://deb.debian.org/debian"
@@ -97,7 +97,7 @@ fi
 case "$1" in
 	update|-u)
 		echo Updating...
-		mkdir -p "${TMPDIR}"
+		mkdir -p "${CACHEDIR}"
 		if [ -f "${PACKAGES}" ]; then rm "${PACKAGES}"; fi
 		curl -s "$INDEX" -o "${PACKAGES}"
 	;;
@@ -118,17 +118,17 @@ case "$1" in
 			echo "Example: ${BASH_SOURCE[0]} preview agave"
 			exit 1
 		fi
-		mkdir -p "${TMPDIR}"
-		rm "${TMPDIR}/preview.png"
+		mkdir -p "${CACHEDIR}"
+		rm "${CACHEDIR}/preview.png"
 		PRINTED=
-		if curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${TMPDIR}/preview.png"; then
+		if curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${CACHEDIR}/preview.png"; then
 			# if we get nothing / "this picture is not available" pic
-			if [ "$($md5 "${TMPDIR}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
-				if curl -L -s "https://sid.ethz.ch/fonts/$2/preview.png" -o "${TMPDIR}/preview.png"; then
-					chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png" 2>/dev/null && PRINTED=1
+			if [ "$($md5 "${CACHEDIR}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
+				if curl -L -s "https://sid.ethz.ch/fonts/$2/preview.png" -o "${CACHEDIR}/preview.png"; then
+					chafa -c 240 -w 9 -O 9 -p on --symbols all "${CACHEDIR}/preview.png" 2>/dev/null && PRINTED=1
 				fi
 			else
-				chafa -c 240 -w 9 -O 9 -p on --symbols all "${TMPDIR}/preview.png" 2>/dev/null && PRINTED=1
+				chafa -c 240 -w 9 -O 9 -p on --symbols all "${CACHEDIR}/preview.png" 2>/dev/null && PRINTED=1
 			fi
 		fi
 		if [ "$PRINTED" != "1" ]; then
@@ -152,7 +152,7 @@ case "$1" in
 			mkdir -p "${target}"
 		fi
 		# look for first font match
-		p="$(unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;exit;}')"
+		p="$(unxz -c "${PACKAGES}" | awk '/^Package: (fonts-)?'"$2"'/ {gsub(/^Package: /,"");print;exit;}')"
 		if [ -z "$p" ]; then
 			q=$(curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
 			s=$(curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
@@ -171,23 +171,32 @@ case "$1" in
 			exit 0
 			fi
 		fi
-		# get package infos
+		# retrive font from debian mirror
+		TMPDIR="$(mktemp --directory --suffix=fnt)"
+		trap 'rm -rf -- "$TMPDIR"' EXIT
 		name="$p"
-		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size): /')"
+		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
 		ver="$(awk '/^Version: /{print$2}' <<< "$infos")"
 		instsize="$(awk '/^Installed-Size: /{print$2}' <<< "$infos")"
 		downsize="$(awk '/^Size: /{print$2}' <<< "$infos")"
 		fpath="$(awk '/^Filename: /{print$2}' <<< "$infos")"
-		f="$(basename "$fpath")"
+		fname="$(basename "$fpath")"
+		md5sum="$(awk '/^MD5sum: /{print$2}' <<< "$infos") ${fname}"
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
-		curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$f"
 		cd "${TMPDIR}" || exit 1
-		data="$(ar t "$f" | grep '^data\.')"
-		ar x "$f" "$data"
-		tar xf "$data"
-		find "${TMPDIR}" -name "*.?tf" -exec cp {} "$target" \;
-		rm "$f" "$data"
-		rm -rf "${TMPDIR:?}/"{usr,etc}
+		test -z "$(curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$fname")" || { echo "Couldn't retrieve file." ; exit 1 ; }
+		echo "${md5sum}" > "${TMPDIR}/${fname}.md5"
+		if ${md5} --check --quiet "${TMPDIR}/${fname}.md5"; then
+			data="$(ar t "$fname" | grep '^data\.tar')"
+			ar x "${TMPDIR}/$fname" "$data"
+			tar xf "${TMPDIR}/$data"
+			find "${TMPDIR}" -name "*.?tf" -exec cp {} "$target" \;
+		else
+			echo "Can't verify md5sum!"
+			exit 1
+		fi
+		#rm "$f" "$data"
+		#rm -rf "${CACHEDIR:?}/"{usr,etc}
 	;;
 	remove|-r)
 		echo "Removing..."
