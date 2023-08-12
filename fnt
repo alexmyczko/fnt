@@ -119,7 +119,7 @@ case "$1" in
 			exit 1
 		fi
 		mkdir -p "${CACHEDIR}"
-		rm "${CACHEDIR}/preview.png"
+		rm -f "${CACHEDIR}/preview.png"
 		PRINTED=
 		if curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${CACHEDIR}/preview.png"; then
 			# if we get nothing / "this picture is not available" pic
