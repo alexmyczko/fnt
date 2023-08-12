@@ -183,10 +183,10 @@ case "$1" in
 		fname="$(basename "$fpath")"
 		md5sum="$(awk '/^MD5sum: /{print$2}' <<< "$infos") ${fname}"
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
-		cd "${TMPDIR}" || exit 1
+		cd "${TMPDIR}" || { echo "Couldn't cd into ${TMPDIR}" ; exit 1 ; }
 		test -z "$(curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$fname")" || { echo "Couldn't retrieve file." ; exit 1 ; }
 		echo "${md5sum}" > "${TMPDIR}/${fname}.md5"
-		if ${md5} --check --quiet "${TMPDIR}/${fname}.md5"; then
+		if ${md5} -c "${TMPDIR}/${fname}.md5" >/dev/null; then
 			data="$(ar t "$fname" | grep '^data\.tar')"
 			ar x "${TMPDIR}/$fname" "$data"
 			tar xf "${TMPDIR}/$data"
@@ -195,8 +195,6 @@ case "$1" in
 			echo "Can't verify md5sum!"
 			exit 1
 		fi
-		#rm "$f" "$data"
-		#rm -rf "${CACHEDIR:?}/"{usr,etc}
 	;;
 	remove|-r)
 		echo "Removing..."
