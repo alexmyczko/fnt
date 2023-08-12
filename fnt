@@ -172,7 +172,7 @@ case "$1" in
 			fi
 		fi
 		# retrive font from debian mirror
-		TMPDIR="$(mktemp --directory --suffix=fnt)"
+		TMPDIR="$(mktemp -d)"
 		trap 'rm -rf -- "$TMPDIR"' EXIT
 		name="$p"
 		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
