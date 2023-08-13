@@ -171,7 +171,7 @@ case "$1" in
 			exit 0
 			fi
 		fi
-		# retrive font from debian mirror
+		# retrieve font from debian mirror
 		TMPDIR="$(mktemp -d)"
 		chmod go-rwx "${TMPDIR}"
 		trap 'rm -rf -- "$TMPDIR"' EXIT
