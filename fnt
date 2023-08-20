@@ -15,7 +15,7 @@ CACHEDIR="${HOME}/.fnt"
 PACKAGES="${CACHEDIR}/Packages.xz"
 # debian sid index
 #INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
-MIRROR="http://deb.debian.org/debian"
+MIRROR="https://deb.debian.org/debian"
 INDEX="${MIRROR}/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
 GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master"
@@ -207,6 +207,8 @@ case "$1" in
 	search|-s)
 		if [ -f "${PACKAGES}" ]; then
 			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
+		else
+			echo "Skipping non-existant Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
 		fi
 		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
 		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
