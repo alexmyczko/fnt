@@ -1,7 +1,7 @@
 BINDIR=/usr/bin
 MANDIR=/usr/share/man
 ZCOMPDIR=/usr/local/share/zsh/site-functions
-VERSION=1.3
+VERSION=1.5
 
 all:
 	@echo make install          to install the software
