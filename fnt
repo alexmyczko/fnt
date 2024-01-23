@@ -248,6 +248,7 @@ case "$1" in
 EOF
 	;;
 	*)
+		# zcat /usr/share/doc/fnt/README.md.gz |head -10 |grep -v '`' |/usr/games/lolcat
 		echo "Nothing..."
 	;;
 esac
