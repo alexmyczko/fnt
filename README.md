@@ -44,6 +44,11 @@ Meanwhile also Debian stable (Bullseye) has an official BPO.
 
 ```
 $ fnt update
+Updating...
+
+$ fnt info
+Information...
+Available Fonts: 2196
 
 $ fnt search agave
 
