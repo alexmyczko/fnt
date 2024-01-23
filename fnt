@@ -52,6 +52,13 @@ case "$s" in
 		md5="md5"
 		target="$HOME/.fonts/"
 	;;
+	OpenBSD)
+		#echo OpenBSD
+		check="curl chafa otfinfo"
+		i="pkg_add"
+		md5="md5"
+		target="$HOME/.local/share/fonts"
+	;;
 	Haiku)
 		#echo Haiku OS
 		check="curl"
@@ -210,8 +217,13 @@ case "$1" in
 		else
 			echo "Skipping non-existant Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
 		fi
-		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
-		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+		if [[ "$(uname -s)" == "OpenBSD" ]]; then
+			curl -s "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
+			curl -s "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
+		else
+			curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+			curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+		fi
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
