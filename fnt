@@ -32,7 +32,7 @@ case "$s" in
 		check="curl brew otfinfo chafa"
 		# otfinfo comes with lcdf-typetools
 		i="brew"
-		md5="md5"
+		md5="md5sum"
 		target="$HOME/Library/Fonts/"
 	;;
 	Linux|GNU/kFreeBSD|GNU)
