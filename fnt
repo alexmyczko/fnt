@@ -18,7 +18,7 @@ PACKAGES="${CACHEDIR}/Packages.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="${MIRROR}/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
-GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-master"
+GINDEX="http://bananas.debian.net/debian/google-fonts/fonts-main"
 
 if ! command -v uname &>/dev/null; then
 	s="Windows"
