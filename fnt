@@ -26,6 +26,121 @@ else
 	s=$(uname -s)
 fi
 
+# Pipelines
+pipe_download(){
+	local PIPEFILE
+	PIPEFILE="$(mktemp -d)/${1##*/}"
+	PIPEDIR="${PIPEFILE%/*}"
+	chmod go-rwx "${PIPEDIR}"
+	trap 'rm -rf -- "$PIPEDIR"' EXIT
+	download "$1" "$PIPEFILE"
+	cat "$PIPEFILE"
+}
+
+download() {
+	# shellcheck disable=SC2086
+	local URL LOPTS HTTP_PROXY
+	URL="$1"
+	if test -z "${1##*.deb}"; then
+		if test -r /etc/debian_version; then
+			eval "$(apt-config shell HTTP_PROXY Acquire::http::Proxy)"
+			HTTP_PROXY=$(auto-apt-proxy 2>/dev/null)
+			#HTTP_PROXY=${AUTO_APT:="$HTTP_PROXY"}
+			if test -n "$HTTP_PROXY"; then
+				# shellcheck disable=SC2086,SC2089
+				LOPTS=" -o Acquire::http::Proxy=\"$HTTP_PROXY\""
+				URL=${URL/https:/http:\//}
+			fi
+		fi
+		if /usr/bin/which /usr/lib/apt/apt-helper>/dev/null
+		then
+			# shellcheck disable=SC2090,SC2086
+			/usr/lib/apt/apt-helper $LOPTS download-file "$URL" "$2" >/dev/null
+			return
+		fi
+	fi
+	if /usr/bin/which fetch>/dev/null
+	then
+		fetch -q -o "$2" "$URL"
+	elif /usr/bin/which curl>/dev/null
+	then
+		curl -L -s -o "$2" "$URL"
+	elif /usr/bin/which wget>/dev/null
+	then
+		wget -q -O "$URL" "$2"
+	else
+		print "ERROR: neither apt-helper, wget, curl nor fetch is installed" >&2
+		exit 70
+	fi
+}
+
+fnt_install() {
+	if [ ! -f "${PACKAGES}" ]; then
+		echo "Could not find ${PACKAGES}"
+		echo "Please run ${BASH_SOURCE[0]} update"
+		# could also just run itself with update...
+		# but apt doesn't do that either :)
+		exit 1
+	fi
+	if [ ! $# -eq 2 ]; then
+		echo "No fontname supplied."
+		echo "Example: ${BASH_SOURCE[0]} install agave"
+		exit 1
+	fi
+	FNTMATCH=$2
+	if [ ! -d "${target}" ]; then
+		mkdir -p "${target}"
+	fi
+	# look for first font match
+	p="$(unxz -c "${PACKAGES}" | awk '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
+	if [ -z "$p" ]; then
+		q=$(pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$FNTMATCH" | head -1)
+		s=$(pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$FNTMATCH" | head -1)
+		if [ -z "$q" ] && [ -z "$s" ]; then
+			echo "Font \"$FNTMATCH\" not found"
+			exit 1
+		else
+			echo "Installing google-${FNTMATCH}"
+			# here comes the google web font installer part using grep '\..tf'
+			pipe_download "$GINDEX/ofl/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
+			download "${GINDEX}/ofl/${FNTMATCH}/$f" "$target/$f"
+		done
+		pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
+		download "${GINDEX}/apache/${FNTMATCH}/$f" "$target/$f"
+	done
+	exit 0
+		fi
+	fi
+	# retrieve font from debian mirror
+	TMPDIR="$(mktemp -d)"
+	chmod go-rwx "${TMPDIR}"
+	trap 'rm -rf -- "$TMPDIR"' EXIT
+	PIT="${TMPDIR}/extract"
+	mkdir -m go-rwx "${PIT}" || { echo "Couldn't eat tartar." ; exit 1 ; }
+	name="$p"
+	infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
+	ver="$(awk '/^Version: /{print$2}' <<< "$infos")"
+	instsize="$(awk '/^Installed-Size: /{print$2}' <<< "$infos")"
+	downsize="$(awk '/^Size: /{print$2}' <<< "$infos")"
+	fpath="$(awk '/^Filename: /{print$2}' <<< "$infos")"
+	fname="$(basename "$fpath")"
+	md5sum="$(awk '/^MD5sum: /{print$2}' <<< "$infos") ${fname}"
+	echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
+	cd "${TMPDIR}" || { echo "Couldn't cd into ${TMPDIR}" ; exit 1 ; }
+	test -z "$(download "${MIRROR}/${fpath}" "${TMPDIR}/$fname")" || { echo "Couldn't retrieve file." ; exit 1 ; }
+	echo "${md5sum}" > "${TMPDIR}/${fname}.md5"
+	if ${md5} -c "${TMPDIR}/${fname}.md5" >/dev/null; then
+		data="$(ar t "$fname" | grep '^data\.tar')"
+		ar x "${TMPDIR}/$fname" "$data"
+		cd "${PIT}" || { echo "Couldn't munch any tartar in: ${PIT}" ; exit 1 ; }
+		tar xf "${TMPDIR}/$data"
+		find "${PIT}" -name "*.?tf" -exec cp {} "$target" \;
+	else
+		echo "Can't verify md5sum!"
+		exit 1
+	fi
+}
+
 case "$s" in
 	Darwin)
 		#echo macOS
@@ -105,7 +220,7 @@ EOF
 		echo Updating...
 		mkdir -p "${CACHEDIR}"
 		if [ -f "${PACKAGES}" ]; then rm "${PACKAGES}"; fi
-		curl -s "$INDEX" -o "${PACKAGES}"
+		download "$INDEX" "${PACKAGES}"
 	;;
 
 	info)
@@ -127,10 +242,10 @@ EOF
 		mkdir -p "${CACHEDIR}"
 		rm -f "${CACHEDIR}/preview.png"
 		PRINTED=
-		if curl -L -s "https://screenshots.debian.net/screenshot/fonts-$2" -o "${CACHEDIR}/preview.png"; then
+		if download "https://screenshots.debian.net/screenshot/fonts-$2" "${CACHEDIR}/preview.png"; then
 			# if we get nothing / "this picture is not available" pic
 			if [ "$($md5 "${CACHEDIR}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
-				if curl -L -s "https://sid.ethz.ch/fonts/$2/preview.png" -o "${CACHEDIR}/preview.png"; then
+				if download "https://sid.ethz.ch/fonts/$2/preview.png" "${CACHEDIR}/preview.png"; then
 					chafa -c 240 -w 9 -O 9 -p on --symbols all "${CACHEDIR}/preview.png" 2>/dev/null && PRINTED=1
 				fi
 			else
@@ -142,69 +257,7 @@ EOF
 		fi
 	;;
 	install|-i)
-		if [ ! -f "${PACKAGES}" ]; then
-			echo "Could not find ${PACKAGES}"
-			echo "Please run ${BASH_SOURCE[0]} update"
-			# could also just run itself with update...
-			# but apt doesn't do that either :)
-			exit 1
-		fi
-		if [ ! $# -eq 2 ]; then
-			echo "No fontname supplied."
-			echo "Example: ${BASH_SOURCE[0]} install agave"
-			exit 1
-		fi
-		if [ ! -d "${target}" ]; then
-			mkdir -p "${target}"
-		fi
-		# look for first font match
-		p="$(unxz -c "${PACKAGES}" | awk '/^Package: (fonts-)?'"$2"'/ {gsub(/^Package: /,"");print;exit;}')"
-		if [ -z "$p" ]; then
-			q=$(curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
-			s=$(curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
-			if [ -z "$q" ] && [ -z "$s" ]; then
-				echo "Font \"$2\" not found"
-				exit 1
-			else
-				echo "Installing google-${2}"
-				# here comes the google web font installer part using grep '\..tf'
-				curl -s "$GINDEX/ofl/${2}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-					curl -g -s "${GINDEX}/ofl/${2}/$f" -o "$target/$f"
-				done
-			curl -s "$GINDEX/apache/${2}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-				curl -g -s "${GINDEX}/apache/${2}/$f" -o "$target/$f"
-			done
-			exit 0
-			fi
-		fi
-		# retrieve font from debian mirror
-		TMPDIR="$(mktemp -d)"
-		chmod go-rwx "${TMPDIR}"
-		trap 'rm -rf -- "$TMPDIR"' EXIT
-		PIT="${TMPDIR}/extract"
-		mkdir -m go-rwx "${PIT}" || { echo "Couldn't eat tartar." ; exit 1 ; }
-		name="$p"
-		infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
-		ver="$(awk '/^Version: /{print$2}' <<< "$infos")"
-		instsize="$(awk '/^Installed-Size: /{print$2}' <<< "$infos")"
-		downsize="$(awk '/^Size: /{print$2}' <<< "$infos")"
-		fpath="$(awk '/^Filename: /{print$2}' <<< "$infos")"
-		fname="$(basename "$fpath")"
-		md5sum="$(awk '/^MD5sum: /{print$2}' <<< "$infos") ${fname}"
-		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
-		cd "${TMPDIR}" || { echo "Couldn't cd into ${TMPDIR}" ; exit 1 ; }
-		test -z "$(curl -s "${MIRROR}/${fpath}" -o "${TMPDIR}/$fname")" || { echo "Couldn't retrieve file." ; exit 1 ; }
-		echo "${md5sum}" > "${TMPDIR}/${fname}.md5"
-		if ${md5} -c "${TMPDIR}/${fname}.md5" >/dev/null; then
-			data="$(ar t "$fname" | grep '^data\.tar')"
-			ar x "${TMPDIR}/$fname" "$data"
-			cd "${PIT}" || { echo "Couldn't munch any tartar in: ${PIT}" ; exit 1 ; }
-			tar xf "${TMPDIR}/$data"
-			find "${PIT}" -name "*.?tf" -exec cp {} "$target" \;
-		else
-			echo "Can't verify md5sum!"
-			exit 1
-		fi
+		fnt_install "$@"
 	;;
 	remove|-r)
 		echo "Removing..."
@@ -217,11 +270,11 @@ EOF
 			echo "Skipping non-existant Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
 		fi
 		if [[ "$(uname -s)" == "OpenBSD" ]]; then
-			curl -s "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
-			curl -s "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
 		else
-			curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
-			curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
 		fi
 	;;
 	moo)
