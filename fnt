@@ -33,7 +33,7 @@ pipe_download(){
 	PIPEFILE="${1%%*/}"
 	if test -z "${PIPEFILE}"; then PIPEFILE=index; fi
 	chmod go-rwx "${PIPEDIR}"
-	#trap 'rm -rf -- "$PIPEDIR"' EXIT
+	trap 'rm -rf -- "$PIPEDIR"' EXIT
 	download "$1" "$PIPEDIR/$PIPEFILE"
 	cat "$PIPEDIR/$PIPEFILE"
 }
