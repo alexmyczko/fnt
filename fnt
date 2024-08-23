@@ -3,7 +3,7 @@
 set -e
 #set -u
 #set -o pipefail
-set -x
+#set -x
 
 # APT but only for fonts
 # alex@aiei.ch
