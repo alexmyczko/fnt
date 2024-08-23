@@ -3,7 +3,7 @@
 set -e
 #set -u
 #set -o pipefail
-#set -x
+set -x
 
 # APT but only for fonts
 # alex@aiei.ch
@@ -29,12 +29,13 @@ fi
 # Pipelines
 pipe_download(){
 	local PIPEFILE
-	PIPEFILE="$(mktemp -d)/${1##*/}"
-	PIPEDIR="${PIPEFILE%/*}"
+	PIPEDIR="$(mktemp -d)"
+	PIPEFILE="${1%%*/}"
+	if test -z "${PIPEFILE}"; then PIPEFILE=index; fi
 	chmod go-rwx "${PIPEDIR}"
-	trap 'rm -rf -- "$PIPEDIR"' EXIT
-	download "$1" "$PIPEFILE"
-	cat "$PIPEFILE"
+	#trap 'rm -rf -- "$PIPEDIR"' EXIT
+	download "$1" "$PIPEDIR/$PIPEFILE"
+	cat "$PIPEDIR/$PIPEFILE"
 }
 
 download() {
@@ -43,7 +44,7 @@ download() {
 	URL="$1"
 	if test -z "${1##*.deb}"; then
 		if test -r /etc/debian_version; then
-			eval "$(apt-config shell HTTP_PROXY Acquire::http::Proxy)"
+			#eval "$(apt-config shell HTTP_PROXY Acquire::http::Proxy)"
 			HTTP_PROXY=$(auto-apt-proxy 2>/dev/null)
 			#HTTP_PROXY=${AUTO_APT:="$HTTP_PROXY"}
 			if test -n "$HTTP_PROXY"; then
@@ -64,7 +65,7 @@ download() {
 		fetch -q -o "$2" "$URL"
 	elif /usr/bin/which curl>/dev/null
 	then
-		curl -L -s -o "$2" "$URL"
+		curl -g -L -s -o "$2" "$URL"
 	elif /usr/bin/which wget>/dev/null
 	then
 		wget -q -O "$URL" "$2"
@@ -114,7 +115,6 @@ deb_handler() {
 	fi
 }
 
-
 fnt_install() {
 	if [ ! -f "${PACKAGES}" ]; then
 		echo "Could not find ${PACKAGES}"
@@ -141,13 +141,16 @@ fnt_install() {
 			echo "Font \"$FNTMATCH\" not found"
 			exit 1
 		else
+			FNTMATCH="${FNTMATCH#google-*}"
 			echo "Installing google-${FNTMATCH}"
 			# here comes the google web font installer part using grep '\..tf'
 			pipe_download "$GINDEX/ofl/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
 			download "${GINDEX}/ofl/${FNTMATCH}/$f" "$TARGET/$f"
+			${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' > "$FNTDATA/index/google-$FNTMATCH"
 		done
 		pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
 		download "${GINDEX}/apache/${FNTMATCH}/$f" "$TARGET/$f"
+		${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' > "$FNTDATA/index/google-$FNTMATCH"
 	done
 	exit 0
 		fi
@@ -284,11 +287,11 @@ EOF
 			echo "Skipping non-existent Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
 		fi
 		if [[ "$(uname -s)" == "OpenBSD" ]]; then
-			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
-			pipe_download "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
 		else
-			pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
-			pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
+			pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
 		fi
 	;;
 	moo)
