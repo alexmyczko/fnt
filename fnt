@@ -10,9 +10,9 @@ set -e
 #
 # selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
 
-#CACHEDIR="${CACHEDIR:-/tmp}"
-CACHEDIR="${HOME}/.fnt"
-PACKAGES="${CACHEDIR}/Packages.xz"
+#FNTDATA="${FNTDATA:-/tmp}"
+FNTDATA="${HOME}/.fnt"
+PACKAGES="${FNTDATA}/Packages.xz"
 # debian sid index
 #INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
 MIRROR="https://deb.debian.org/debian"
@@ -74,6 +74,47 @@ download() {
 	fi
 }
 
+deb_handler() {
+	# retrieve font from debian mirror and store infos for removal
+	TMPDIR="$(mktemp -d)"
+	chmod go-rwx "${TMPDIR}"
+	trap 'rm -rf -- "$TMPDIR"' EXIT
+	PIT="${TMPDIR}/extract"
+	mkdir -m go-rwx "${PIT}" || { echo "Couldn't eat tartar." ; exit 1 ; }
+	NAME="$1"
+	INFOS="$(unxz -c "${PACKAGES}" | awk "/^Package: ${NAME}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
+	VER="$(awk '/^Version: /{print$2}' <<< "$INFOS")"
+	INSTSIZE="$(awk '/^Installed-Size: /{print$2}' <<< "$INFOS")"
+	DOWNSIZE="$(awk '/^Size: /{print$2}' <<< "$INFOS")"
+	FPATH="$(awk '/^Filename: /{print$2}' <<< "$INFOS")"
+	FNAME="$(basename "$FPATH")"
+	MD5SUM="$(awk '/^MD5sum: /{print$2}' <<< "$INFOS") ${FNAME}"
+	echo "Installing ${NAME} ${VER} [${DOWNSIZE} ${INSTSIZE}000 ${MIRROR}/${FPATH}]..."
+	cd "${TMPDIR}" || { echo "Couldn't cd into ${TMPDIR}" ; exit 1 ; }
+	test -z "$(download "${MIRROR}/${FPATH}" "${TMPDIR}/$FNAME")" || { echo "Couldn't retrieve file." ; exit 1 ; }
+	echo "${MD5SUM}" > "${TMPDIR}/${FNAME}.md5"
+	if ${md5} -c "${TMPDIR}/${FNAME}.md5" >/dev/null; then
+		DATA="$(ar t "$TMPDIR/$FNAME" | grep '^data\.tar')"
+		mkdir -p "${PIT}/data"
+		ar x --output "${PIT}" "${TMPDIR}/$FNAME" "$DATA"
+		cd "${PIT}/data" || { echo "Couldn't munch any tartar in: ${PIT}/control" ; exit 1 ; }
+		tar fx "${PIT}/$DATA"
+		find "${PIT}/data" -name "*.?tf" -exec cp {} "$TARGET" \;
+		# extract filelist with md5sum
+		CONTROL="$(ar t "$TMPDIR/$FNAME" | grep '^control\.tar')"
+		mkdir -p "${PIT}/control"
+		ar x --output "${PIT}" "${TMPDIR}/$FNAME" "$CONTROL"
+		cd "${PIT}/control" || { echo "Couldn't munch any tartar in: ${PIT}/control" ; exit 1 ; }
+		tar xf "${PIT}/$CONTROL"
+		mkdir -p "$FNTDATA/index" || { echo "Couldn't create index directory: $FNTDATA/index" ; exit 1 ; }
+		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTDATA/index/$NAME"
+	else
+		echo "Can't verify md5sum!"
+		exit 1
+	fi
+}
+
+
 fnt_install() {
 	if [ ! -f "${PACKAGES}" ]; then
 		echo "Could not find ${PACKAGES}"
@@ -88,8 +129,8 @@ fnt_install() {
 		exit 1
 	fi
 	FNTMATCH=$2
-	if [ ! -d "${target}" ]; then
-		mkdir -p "${target}"
+	if [ ! -d "${TARGET}" ]; then
+		mkdir -p "${TARGET}"
 	fi
 	# look for first font match
 	p="$(unxz -c "${PACKAGES}" | awk '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
@@ -103,42 +144,15 @@ fnt_install() {
 			echo "Installing google-${FNTMATCH}"
 			# here comes the google web font installer part using grep '\..tf'
 			pipe_download "$GINDEX/ofl/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-			download "${GINDEX}/ofl/${FNTMATCH}/$f" "$target/$f"
+			download "${GINDEX}/ofl/${FNTMATCH}/$f" "$TARGET/$f"
 		done
 		pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-		download "${GINDEX}/apache/${FNTMATCH}/$f" "$target/$f"
+		download "${GINDEX}/apache/${FNTMATCH}/$f" "$TARGET/$f"
 	done
 	exit 0
 		fi
 	fi
-	# retrieve font from debian mirror
-	TMPDIR="$(mktemp -d)"
-	chmod go-rwx "${TMPDIR}"
-	trap 'rm -rf -- "$TMPDIR"' EXIT
-	PIT="${TMPDIR}/extract"
-	mkdir -m go-rwx "${PIT}" || { echo "Couldn't eat tartar." ; exit 1 ; }
-	name="$p"
-	infos="$(unxz -c "${PACKAGES}" | awk "/^Package: ${name}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
-	ver="$(awk '/^Version: /{print$2}' <<< "$infos")"
-	instsize="$(awk '/^Installed-Size: /{print$2}' <<< "$infos")"
-	downsize="$(awk '/^Size: /{print$2}' <<< "$infos")"
-	fpath="$(awk '/^Filename: /{print$2}' <<< "$infos")"
-	fname="$(basename "$fpath")"
-	md5sum="$(awk '/^MD5sum: /{print$2}' <<< "$infos") ${fname}"
-	echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}/${fpath}]..."
-	cd "${TMPDIR}" || { echo "Couldn't cd into ${TMPDIR}" ; exit 1 ; }
-	test -z "$(download "${MIRROR}/${fpath}" "${TMPDIR}/$fname")" || { echo "Couldn't retrieve file." ; exit 1 ; }
-	echo "${md5sum}" > "${TMPDIR}/${fname}.md5"
-	if ${md5} -c "${TMPDIR}/${fname}.md5" >/dev/null; then
-		data="$(ar t "$fname" | grep '^data\.tar')"
-		ar x "${TMPDIR}/$fname" "$data"
-		cd "${PIT}" || { echo "Couldn't munch any tartar in: ${PIT}" ; exit 1 ; }
-		tar xf "${TMPDIR}/$data"
-		find "${PIT}" -name "*.?tf" -exec cp {} "$target" \;
-	else
-		echo "Can't verify md5sum!"
-		exit 1
-	fi
+deb_handler "$p"
 }
 
 case "$s" in
@@ -148,16 +162,16 @@ case "$s" in
 		# otfinfo comes with lcdf-typetools
 		i="brew"
 		md5="md5sum"
-		target="$HOME/Library/Fonts/"
+		TARGET="$HOME/Library/Fonts/"
 	;;
 	Linux|GNU/kFreeBSD|GNU)
 		#echo Linux
 		check="curl chafa otfinfo"
 		i="apt"
 		md5="md5sum"
-		target="$HOME/.fonts/"
+		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
-			target="/usr/local/share/fonts/"
+			TARGET="/usr/local/share/fonts/"
 		fi
 	;;
 	FreeBSD)
@@ -165,26 +179,26 @@ case "$s" in
 		check="curl chafa otfinfo"
 		i="pkg"
 		md5="md5"
-		target="$HOME/.fonts/"
+		TARGET="$HOME/.fonts/"
 	;;
 	OpenBSD)
 		#echo OpenBSD
 		check="curl chafa otfinfo"
 		i="pkg_add"
 		md5="md5"
-		target="$HOME/.local/share/fonts"
+		TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
 		#echo Haiku OS
 		check="curl"
 		i="pkgman"
-		target="$HOME/config/non-packaged/data/fonts/"
+		TARGET="$HOME/config/non-packaged/data/fonts/"
 	;;
 	Windows)
 		#echo Windows
 		check="cmd.exe"
 		i="ENOPKGMANAGER"
-		target="$USERPROFILE\\Fonts"
+		TARGET="$USERPROFILE\\Fonts"
 	;;
 	*)
 		echo "Please report $s to https://github.com/alexmyczko/fnt/issues"
@@ -218,7 +232,7 @@ EOF
 
 	update|-u)
 		echo Updating...
-		mkdir -p "${CACHEDIR}"
+		mkdir -p "${FNTDATA}/index"
 		if [ -f "${PACKAGES}" ]; then rm "${PACKAGES}"; fi
 		download "$INDEX" "${PACKAGES}"
 	;;
@@ -229,7 +243,7 @@ EOF
 	;;
 
 	list|-l)
-		find "$target" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null | while read -r f; do
+		find "$TARGET" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null | while read -r f; do
 			echo "$(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
 		done
 	;;
@@ -239,17 +253,17 @@ EOF
 			echo "Example: ${BASH_SOURCE[0]} preview agave"
 			exit 1
 		fi
-		mkdir -p "${CACHEDIR}"
-		rm -f "${CACHEDIR}/preview.png"
+		mkdir -p "${FNTDATA}/index"
+		rm -f "${FNTDATA}/preview.png"
 		PRINTED=
-		if download "https://screenshots.debian.net/screenshot/fonts-$2" "${CACHEDIR}/preview.png"; then
+		if download "https://screenshots.debian.net/screenshot/fonts-$2" "${FNTDATA}/preview.png"; then
 			# if we get nothing / "this picture is not available" pic
-			if [ "$($md5 "${CACHEDIR}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
-				if download "https://sid.ethz.ch/fonts/$2/preview.png" "${CACHEDIR}/preview.png"; then
-					chafa -c 240 -w 9 -O 9 -p on --symbols all "${CACHEDIR}/preview.png" 2>/dev/null && PRINTED=1
+			if [ "$($md5 "${FNTDATA}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
+				if download "https://sid.ethz.ch/fonts/$2/preview.png" "${FNTDATA}/preview.png"; then
+					chafa -c 240 -w 9 -O 9 -p on --symbols all "${FNTDATA}/preview.png" 2>/dev/null && PRINTED=1
 				fi
 			else
-				chafa -c 240 -w 9 -O 9 -p on --symbols all "${CACHEDIR}/preview.png" 2>/dev/null && PRINTED=1
+				chafa -c 240 -w 9 -O 9 -p on --symbols all "${FNTDATA}/preview.png" 2>/dev/null && PRINTED=1
 			fi
 		fi
 		if [ "$PRINTED" != "1" ]; then
@@ -267,7 +281,7 @@ EOF
 		if [ -f "${PACKAGES}" ]; then
 			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
 		else
-			echo "Skipping non-existant Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
+			echo "Skipping non-existent Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
 		fi
 		if [[ "$(uname -s)" == "OpenBSD" ]]; then
 			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,' |ggrep -v "\.\.$" | awk "/$2/"
