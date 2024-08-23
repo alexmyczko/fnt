@@ -242,7 +242,10 @@ EOF
 
 	info)
 		echo "Information..."
-		echo "Available Fonts: $(fnt search | wc -l)"
+		INSTALLEDFONTS=$(find "$FNTDATA/index/" -maxdepth 1 -type f |awk -F/ '{print $NF}')
+		ALLFONTS=$(fnt search)
+		echo "Installed: Debian:$(grep -c '^fonts-' <<< "$INSTALLEDFONTS") Google:$(grep -c '^google-' <<< "$INSTALLEDFONTS")"
+		echo "Available: Debian:$(grep -c '^fonts-' <<< "$ALLFONTS") Google:$(grep -c '^google-' <<< "$ALLFONTS")"
 	;;
 
 	list|-l)
