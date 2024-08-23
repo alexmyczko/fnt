@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
 # vim: autoindent noexpandtab
 set -e
-#set -u
-#set -o pipefail
-#set -x
+# set -x
 
 # APT but only for fonts
 # alex@aiei.ch
-#
-# selfupdate=https://raw.githubusercontent.com/alexmyczko/fnt/main/fnt
+# christopher@bocki.com
 
-#FNTDATA="${FNTDATA:-/tmp}"
-FNTDATA="${HOME}/.fnt"
-PACKAGES="${FNTDATA}/Packages.xz"
-# debian sid index
-#INDEX="http://ftp.ch.debian.org/debian/dists/sid/main/binary-all/Packages.xz"
+# Defaults
+TARGET="$HOME/.fonts/"
+FNTDATA="$HOME/.fnt"
+PACKAGES="$FNTDATA/Packages.xz"
 MIRROR="https://deb.debian.org/debian"
-INDEX="${MIRROR}/dists/sid/main/binary-all/Packages.xz"
+INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
 GINDEX="http://bananas.debian.net/debian/google-fonts/fonts-main"
+mkdir -p "$FNTDATA/index" || { echo "Couldn't create cache+index directory: $FNTDATA/index" ; exit 1 ; }
 
 if ! command -v uname &>/dev/null; then
 	s="Windows"
@@ -40,21 +37,18 @@ pipe_download(){
 
 download() {
 	# shellcheck disable=SC2086
-	local URL LOPTS HTTP_PROXY
+	local URL LOPTS
 	URL="$1"
 	if test -z "${1##*.deb}"; then
-		if test -r /etc/debian_version; then
-			#eval "$(apt-config shell HTTP_PROXY Acquire::http::Proxy)"
-			HTTP_PROXY=$(auto-apt-proxy 2>/dev/null)
-			#HTTP_PROXY=${AUTO_APT:="$HTTP_PROXY"}
-			if test -n "$HTTP_PROXY"; then
-				# shellcheck disable=SC2086,SC2089
-				LOPTS=" -o Acquire::http::Proxy=\"$HTTP_PROXY\""
-				URL=${URL/https:/http:\//}
-			fi
-		fi
 		if /usr/bin/which /usr/lib/apt/apt-helper>/dev/null
 		then
+			# Test if we could use an local apt-proxy (non-ssl) but no worry we do
+			# md5sum checking on the file anyway.
+			PROXYURL=${URL/https:/http:}
+			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy "$PROXYURL" |
+				awk -F\' '{print $2}')"; then
+				URL=$PROXYURL;
+			fi
 			# shellcheck disable=SC2090,SC2086
 			/usr/lib/apt/apt-helper $LOPTS download-file "$URL" "$2" >/dev/null
 			return
@@ -95,19 +89,17 @@ deb_handler() {
 	test -z "$(download "${MIRROR}/${FPATH}" "${TMPDIR}/$FNAME")" || { echo "Couldn't retrieve file." ; exit 1 ; }
 	echo "${MD5SUM}" > "${TMPDIR}/${FNAME}.md5"
 	if ${md5} -c "${TMPDIR}/${FNAME}.md5" >/dev/null; then
+		# deb data
 		DATA="$(ar t "$TMPDIR/$FNAME" | grep '^data\.tar')"
-		mkdir -p "${PIT}/data"
-		ar x --output "${PIT}" "${TMPDIR}/$FNAME" "$DATA"
-		cd "${PIT}/data" || { echo "Couldn't munch any tartar in: ${PIT}/control" ; exit 1 ; }
-		tar fx "${PIT}/$DATA"
+		mkdir -p "${PIT}/data" && cd "${PIT}/data"
+		ar x "${TMPDIR}/$FNAME" "$DATA"
+		tar xf "${PIT}/data/$DATA"
 		find "${PIT}/data" -name "*.?tf" -exec cp {} "$TARGET" \;
-		# extract filelist with md5sum
+		# deb control
 		CONTROL="$(ar t "$TMPDIR/$FNAME" | grep '^control\.tar')"
-		mkdir -p "${PIT}/control"
-		ar x --output "${PIT}" "${TMPDIR}/$FNAME" "$CONTROL"
-		cd "${PIT}/control" || { echo "Couldn't munch any tartar in: ${PIT}/control" ; exit 1 ; }
-		tar xf "${PIT}/$CONTROL"
-		mkdir -p "$FNTDATA/index" || { echo "Couldn't create index directory: $FNTDATA/index" ; exit 1 ; }
+		mkdir -p "${PIT}/control" && cd "${PIT}/control"
+		ar x "${TMPDIR}/$FNAME" "$CONTROL"
+		tar xf "${PIT}/control/$CONTROL"
 		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTDATA/index/$NAME"
 	else
 		echo "Can't verify md5sum!"
@@ -242,6 +234,7 @@ EOF
 
 	info)
 		echo "Information..."
+		mkdir -p "${FNTDATA}/index"
 		INSTALLEDFONTS=$(find "$FNTDATA/index/" -maxdepth 1 -type f |awk -F/ '{print $NF}')
 		ALLFONTS=$(fnt search)
 		echo "Installed: Debian:$(grep -c '^fonts-' <<< "$INSTALLEDFONTS") Google:$(grep -c '^google-' <<< "$INSTALLEDFONTS")"
@@ -285,6 +278,9 @@ EOF
 	;;
 	search|-s)
 		if [ -f "${PACKAGES}" ]; then
+			if test -z "$(find "$PACKAGES" -ctime +7)"; then
+				echo "Deb-Cache older 7 days, consider running: ${BASH_SOURCE[0]} update"
+			fi
 			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
 		else
 			echo "Skipping non-existent Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
@@ -320,6 +316,7 @@ EOF
 	;;
 	*)
 		lolcat=$(command -v cat)
+		PATH="/usr/games:$PATH"
 		if command -v lolcat>/dev/null; then lolcat=$(command -v lolcat); fi
 		$lolcat << 'EOF'
    .d888
