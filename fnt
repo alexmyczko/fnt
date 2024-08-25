@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # vim: autoindent noexpandtab
 set -e
-# set -x
+#set -x
 
 # APT but only for fonts
 # alex@aiei.ch
@@ -10,12 +10,15 @@ set -e
 # Defaults
 TARGET="$HOME/.fonts/"
 FNTDATA="$HOME/.fnt"
+FNTINDEXDIR="$FNTDATA/index"
 PACKAGES="$FNTDATA/Packages.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
 GINDEX="http://bananas.debian.net/debian/google-fonts/fonts-main"
-mkdir -p "$FNTDATA/index" || { echo "Couldn't create cache+index directory: $FNTDATA/index" ; exit 1 ; }
+if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
+	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
+fi
 
 if ! command -v uname &>/dev/null; then
 	s="Windows"
@@ -100,7 +103,7 @@ deb_handler() {
 		mkdir -p "${PIT}/control" && cd "${PIT}/control"
 		ar x "${TMPDIR}/$FNAME" "$CONTROL"
 		tar xf "${PIT}/control/$CONTROL"
-		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTDATA/index/$NAME"
+		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTINDEXDIR/$NAME"
 	else
 		echo "Can't verify md5sum!"
 		exit 1
@@ -135,16 +138,17 @@ fnt_install() {
 		else
 			FNTMATCH="${FNTMATCH#google-*}"
 			echo "Installing google-${FNTMATCH}"
+			rm -f "$FNTINDEXDIR/google-$FNTMATCH"
 			# here comes the google web font installer part using grep '\..tf'
 			pipe_download "$GINDEX/ofl/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-			download "${GINDEX}/ofl/${FNTMATCH}/$f" "$TARGET/$f"
-			${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' > "$FNTDATA/index/google-$FNTMATCH"
-		done
-		pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-		download "${GINDEX}/apache/${FNTMATCH}/$f" "$TARGET/$f"
-		${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' > "$FNTDATA/index/google-$FNTMATCH"
-	done
-	exit 0
+				download "${GINDEX}/ofl/${FNTMATCH}/$f" "$TARGET/$f"
+				${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' >> "$FNTINDEXDIR/google-$FNTMATCH"
+			done
+			pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
+				download "${GINDEX}/apache/${FNTMATCH}/$f" "$TARGET/$f"
+				${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' >> "$FNTINDEXDIR/google-$FNTMATCH"
+			done
+		exit 0
 		fi
 	fi
 deb_handler "$p"
@@ -211,12 +215,12 @@ done
 case "$1" in
 	help|-h)
 		cat << 'EOF'
-Syntax: fnt [ update | list | info | help ]
+Syntax: fnt [ update | list [indexfile]| info | help ]
         fnt [ install | remove | preview | search ] font
 
 update|-u  updates the font package index of debian sid
 list|-l    lists installed fonts with glyphcount per font
-info       information about how many fonts can be installed
+info       information about how many fonts can be installed and are available
 help|-h    this help
 install|-i install a font
 remove|-r  remove a font
@@ -227,24 +231,44 @@ EOF
 
 	update|-u)
 		echo Updating...
-		mkdir -p "${FNTDATA}/index"
-		if [ -f "${PACKAGES}" ]; then rm "${PACKAGES}"; fi
-		download "$INDEX" "${PACKAGES}"
+		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES"
+		download "$INDEX" "$PACKAGES"
 	;;
 
 	info)
 		echo "Information..."
-		mkdir -p "${FNTDATA}/index"
-		INSTALLEDFONTS=$(find "$FNTDATA/index/" -maxdepth 1 -type f |awk -F/ '{print $NF}')
-		ALLFONTS=$(fnt search)
-		echo "Installed: Debian:$(grep -c '^fonts-' <<< "$INSTALLEDFONTS") Google:$(grep -c '^google-' <<< "$INSTALLEDFONTS")"
-		echo "Available: Debian:$(grep -c '^fonts-' <<< "$ALLFONTS") Google:$(grep -c '^google-' <<< "$ALLFONTS")"
+		mkdir -p "$FNTINDEXDIR"
+		INSTALLEDFONTS=$(find "$FNTINDEXDIR" -maxdepth 1 -type f |
+			awk -F/ '{print $NF}')
+					ALLFONTS=$(${BASH_SOURCE[0]} search)
+		printf 'Installed:\tDebian: %i\tGoogle: %i\n' \
+			"$(grep -c '^fonts-' <<< "$INSTALLEDFONTS")" \
+			"$(grep -c '^google-' <<< "$INSTALLEDFONTS")"
+		printf 'Available:\tDebian: %i\tGoogle: %i\n' \
+			"$(grep -c '^fonts-' <<< "$ALLFONTS")" \
+			"$(grep -c '^google-' <<< "$ALLFONTS")"
 	;;
 
 	list|-l)
-		find "$TARGET" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null | while read -r f; do
-			echo "$(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
-		done
+		if [ $# -eq 1 ]; then
+			find "$TARGET" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null |
+				while read -r f; do
+					IDX=$(basename "$(grep -rl "$(basename "$f")" "$FNTINDEXDIR")")
+					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
+					unset IDX
+				done
+		fi
+		if [ $# -eq 2 ] && [ "$2" = "index" ] ; then
+			find "$FNTINDEXDIR" -type f | awk -F'/' '{print $NF}'
+		fi
+		if [ $# -eq 2 ] && [ -r "$FNTINDEXDIR/$2" ]; then
+			# shellcheck disable=SC2046
+			find $(awk -v target="$TARGET" \
+				'{printf "%s/%s ", target, $2}' "$FNTINDEXDIR/$2") |
+				while read -r font; do
+					echo "$(basename "${font}") [$(otfinfo -u "$font" 2>/dev/null | wc -l)]"
+				done
+		fi
 	;;
 	preview|-p)
 		if [ $# -ne 2 ]; then
@@ -252,13 +276,14 @@ EOF
 			echo "Example: ${BASH_SOURCE[0]} preview agave"
 			exit 1
 		fi
-		mkdir -p "${FNTDATA}/index"
+		mkdir -p "$FNTINDEXDIR"
 		rm -f "${FNTDATA}/preview.png"
 		PRINTED=
-		if download "https://screenshots.debian.net/screenshot/fonts-$2" "${FNTDATA}/preview.png"; then
+		FNTMATCH="${2/(fonts|google)-/}"
+		if download "https://screenshots.debian.net/screenshot/fonts-$FNTMATCH" "${FNTDATA}/preview.png"; then
 			# if we get nothing / "this picture is not available" pic
 			if [ "$($md5 "${FNTDATA}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
-				if download "https://sid.ethz.ch/fonts/$2/preview.png" "${FNTDATA}/preview.png"; then
+				if download "https://sid.ethz.ch/fonts/$FNTMATCH/preview.png" "${FNTDATA}/preview.png"; then
 					chafa -c 240 -w 9 -O 9 -p on --symbols all "${FNTDATA}/preview.png" 2>/dev/null && PRINTED=1
 				fi
 			else
@@ -273,24 +298,48 @@ EOF
 		fnt_install "$@"
 	;;
 	remove|-r)
-		echo "Removing..."
-		echo "Feel free to send patches or dollars (see the sponsor link)"
+		if [ $# -eq 1 ] ; then
+			echo "Usage: ${BASH_SOURCE[0]} indexfile"
+			echo "To get a list of indexes: ${BASH_SOURCE[0]} list index"
+		fi
+		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
+			awk '{print$2}' "$FNTINDEXDIR/$" |while read -r FONTFILE; do
+			${BASH_SOURCE[0]} remove "$2" "$FONTFILE"
+		done
+		rm -fv "${FNTINDEXDIR:?}/$2"
+		fi
+		if [ $# -eq 3 ] && [ -w "$FNTINDEXDIR/$2" ] && [ -w "$TARGET/$3" ] ; then
+			if grep -q "$3" "$FNTINDEXDIR/$2"; then
+				rm -fv "${TARGET:?}/${FONT:?}"
+			fi
+		fi
 	;;
 	search|-s)
 		if [ -f "${PACKAGES}" ]; then
-			if test -z "$(find "$PACKAGES" -ctime +7)"; then
-				echo "Deb-Cache older 7 days, consider running: ${BASH_SOURCE[0]} update"
+			if test -n "$(find "$PACKAGES" -type f -mtime +6)"; then
+				stat "$PACKAGES" >&2
+				echo "Deb-Cache older 7 days, consider running: ${BASH_SOURCE[0]} update" >&2
 			fi
 			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
 		else
-			echo "Skipping non-existent Packages cache. Consider running: ${BASH_SOURCE[0]} update" >&2
+			echo "Skipping non-existent Packages cache, consider running: ${BASH_SOURCE[0]} update" >&2
 		fi
-		if [[ "$(uname -s)" == "OpenBSD" ]]; then
+		if [[ "$s" == "OpenBSD" ]]; then
 			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
 			pipe_download "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
 		else
 			pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
 			pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
+		fi
+	;;
+	purge)
+		if [ $# -eq 1 ] ; then
+			echo "This command will remove $TARGET and $FNTDATA!"
+			echo -e "If you are certain use:\n\t${BASH_SOURCE[0]} purge yes-i-am-sure"
+			echo "You have been warned."
+		fi
+		if [ $# -eq 2 ] && [ "$2" = "yes-i-am-sure" ] ; then
+			rm -Rvf "${TARGET:?}" "${FNTDATA:?}"
 		fi
 	;;
 	moo)
