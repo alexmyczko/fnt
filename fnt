@@ -215,7 +215,7 @@ done
 case "$1" in
 	help|-h)
 		cat << 'EOF'
-Syntax: fnt [ update | list [index|fontname]| info | help ]
+Syntax: fnt [ update | list [indexfile]| info | help ]
         fnt [ install | remove | preview | search ] font
 
 update|-u  updates the font package index of debian sid
