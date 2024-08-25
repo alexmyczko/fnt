@@ -22,20 +22,20 @@ fonts)
     subcmd=${words[2]}
 
     case $subcmd in
-    update | info | search) ;;
-    remove)
-        local -a installed
-        if [ "$(fnt list)" != "" ]; then
-            installed=("$(fnt list |awk '{print$1}')")
-            _values \
-                "installed" $installed
-        fi
-        ;;
-    *)
+    help | update | info | search) ;;
+    install|-i|preview|-p)
         local -a fonts
-        fonts=($(fnt search |sed s,google-,, | sed s,fonts-,,))
+        fonts=($(fnt search 2>/dev/null | sed 's,^google-,,;s,^fonts-,,'))
         _values \
             "fonts" $fonts
+        ;;
+    list|-l|remove|-r)
+        local -a fontindex
+        fontindex=($(fnt list index))
+        _values \
+            "fontindex" $fontindex
+        ;;
+    *)
         ;;
     esac
     ;;
