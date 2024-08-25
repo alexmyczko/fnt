@@ -300,7 +300,7 @@ EOF
 	remove|-r)
 		if [ $# -eq 1 ] ; then
 			echo "Usage: ${BASH_SOURCE[0]} indexfile"
-			echo "To list all: ${BASH_SOURCE[0]} list index"
+			echo "To get a list of indexes: ${BASH_SOURCE[0]} list index"
 		fi
 		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
 			awk '{print$2}' "$FNTINDEXDIR/$" |while read -r FONTFILE; do
