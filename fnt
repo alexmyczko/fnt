@@ -15,7 +15,7 @@ PACKAGES="$FNTDATA/Packages.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
 # google fonts index
-GINDEX="http://bananas.debian.net/debian/google-fonts/fonts-main"
+GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-main"
 if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
 	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
 fi
