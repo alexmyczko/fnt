@@ -320,7 +320,7 @@ EOF
 			echo "To get a list of indexes: ${BASH_SOURCE[0]} list index"
 		fi
 		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
-			awk '{print$2}' "$FNTINDEXDIR/$" |while read -r FONTFILE; do
+			awk '{print$2}' "$FNTINDEXDIR/$2" |while read -r FONTFILE; do
 			${BASH_SOURCE[0]} remove "$2" "$FONTFILE"
 		done
 		rm -fv "${FNTINDEXDIR:?}/$2"
