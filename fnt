@@ -16,8 +16,9 @@ APACHE="$FNTDATA/APACHE.xz"
 OFL="$FNTDATA/OFL.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
-APACHEINDEX="https://sid.ethz.ch/debian/google-fonts/APACHE.xz"
-OFLINDEX="https://sid.ethz.ch/debian/google-fonts/OFL.xz"
+GMIRROR="https://sid.ethz.ch/debian/google-fonts"
+APACHEINDEX="$GMIRROR/APACHE.xz"
+OFLINDEX="$GMIRROR/OFL.xz"
 if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
 	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
 fi
@@ -119,6 +120,8 @@ deb_handler() {
 }
 
 fnt_install() {
+	local a o p
+	a= o= p=
 	if [ ! -f "${PACKAGES}" ]; then
 		echo "Could not find ${PACKAGES}"
 		echo "Please run ${BASH_SOURCE[0]} update"
@@ -137,29 +140,30 @@ fnt_install() {
 	fi
 	# look for first font match
 	p="$(unxz -c "${PACKAGES}" | awk '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
-	if [ -z "$p" ]; then
-		q=$(pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$FNTMATCH" | head -1)
-		s=$(pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$FNTMATCH" | head -1)
-		if [ -z "$q" ] && [ -z "$s" ]; then
-			echo "Font \"$FNTMATCH\" not found"
-			exit 1
-		else
-			FNTMATCH="${FNTMATCH#google-*}"
-			echo "Installing google-${FNTMATCH}"
-			rm -f "$FNTINDEXDIR/google-$FNTMATCH"
-			# here comes the google web font installer part using grep '\..tf'
-			pipe_download "$GINDEX/ofl/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-				download "${GINDEX}/ofl/${FNTMATCH}/$f" "$TARGET/$f"
-				${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' >> "$FNTINDEXDIR/google-$FNTMATCH"
+	if !  [ -z "$p" ]; then
+		deb_handler "$p"
+		return
+	fi
+	FNTMATCH=${FNTMATCH/google-/}
+	a="$(unxz -c "${APACHE}" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
+	if ! [ -z "$a" ]; then
+		dir="$(awk '/^Directory: /  {print$2}' <<< $a)"
+		files="$(awk '/^ .*\.?tf$/ {print $2}' <<< $a)"
+		for file in $files; do
+			download "$GMIRROR/$dir/$file" "$TARGET/$file"
+		done
+		return
+	else
+		o="$(unxz -c "${OFL}" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
+		if ! [ -z "$o" ]; then
+			dir="$(awk '/^Directory: /  {print$2}' <<< $o)"
+			files="$(awk '/^ .*\.?tf$/ {print $2}' <<< $o)"
+			for file in $files; do
+				download "$GMIRROR/$dir/$file" "$TARGET/$file"
 			done
-			pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-				download "${GINDEX}/apache/${FNTMATCH}/$f" "$TARGET/$f"
-				${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' >> "$FNTINDEXDIR/google-$FNTMATCH"
-			done
-		exit 0
+			return
 		fi
 	fi
-deb_handler "$p"
 }
 
 case "$s" in
