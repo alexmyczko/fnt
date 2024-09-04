@@ -8,7 +8,7 @@ case $state in
 mode)
     _values \
         $state \
-        {update,-u}"[updates the font package index of debian sid]" \
+        {update,-u}"[update fnt package cache]" \
         {list,-l}"[lists installed fonts with glyphcount per font]" \
         info"[information about how many fonts can be installed]" \
         {help,-h}"[show help]" \
