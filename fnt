@@ -42,9 +42,8 @@ pipe_download(){
 }
 
 search() {
-	# Fonts via Debian
-	xzcat "${PACKAGES}" | awk '/^Package: fonts-'"$1"'/ {gsub(/^Package: /,"");print;}'
-	xzcat "${APACHE}" "${OFL}" | awk '/^Package: '"$1"'/ {gsub(/^/, "google-", $2); print $2}'
+	xzcat "${PACKAGES}" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
+	xzcat "${APACHE}" "${OFL}" | awk '/^Package: .*'"$1"'.*/ {gsub(/^/, "google-", $2); print $2}'
 }
 
 download() {
