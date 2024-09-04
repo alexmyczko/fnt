@@ -320,9 +320,13 @@ EOF
 			echo "To get a list of indexes: ${BASH_SOURCE[0]} list index"
 		fi
 		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
+			if [ -e "$FNTINDEXDIR/$2" ]; then
 			awk '{print$2}' "$FNTINDEXDIR/$2" |while read -r FONTFILE; do
 			${BASH_SOURCE[0]} remove "$2" "$FONTFILE"
 		done
+		else
+			echo "Couldn't find the font $2"
+			fi
 		rm -fv "${FNTINDEXDIR:?}/$2"
 		fi
 		if [ $# -eq 3 ] && [ -w "$FNTINDEXDIR/$2" ] && [ -w "$TARGET/$3" ] ; then
