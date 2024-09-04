@@ -12,10 +12,12 @@ TARGET="$HOME/.fonts/"
 FNTDATA="$HOME/.fnt"
 FNTINDEXDIR="$FNTDATA/index"
 PACKAGES="$FNTDATA/Packages.xz"
+APACHE="$FNTDATA/APACHE.xz"
+OFL="$FNTDATA/OFL.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
-# google fonts index
-GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-main"
+APACHEINDEX="https://sid.ethz.ch/debian/google-fonts/APACHE.xz"
+OFLINDEX="https://sid.ethz.ch/debian/google-fonts/OFL.xz"
 if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
 	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
 fi
@@ -36,6 +38,12 @@ pipe_download(){
 	trap 'rm -rf -- "$PIPEDIR"' EXIT
 	download "$1" "$PIPEDIR/$PIPEFILE"
 	cat "$PIPEDIR/$PIPEFILE"
+}
+
+search() {
+	# Fonts via Debian
+	xzcat "${PACKAGES}" | awk '/^Package: fonts-'"$1"'/ {gsub(/^Package: /,"");print;}'
+	xzcat "${APACHE}" "${OFL}" | awk '/^Package: '"$1"'/ {gsub(/^/, "google-", $2); print $2}'
 }
 
 download() {
@@ -230,9 +238,12 @@ EOF
 	;;
 
 	update|-u)
-		echo Updating...
+		echo -n "Updating..."
 		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES"
-		download "$INDEX" "$PACKAGES"
+		download "$INDEX" "$PACKAGES"; echo -n " ${PACKAGES##*/}... "
+		download "$APACHEINDEX" "$APACHE"; echo -n " ${APACHE##*/}.. "
+		download "$OFLINDEX" "$OFL"; echo -n " ${OFL##*/}.. "
+		echo -n -e "done!\n"
 	;;
 
 	info)
@@ -315,22 +326,7 @@ EOF
 		fi
 	;;
 	search|-s)
-		if [ -f "${PACKAGES}" ]; then
-			if test -n "$(find "$PACKAGES" -type f -mtime +6)"; then
-				stat "$PACKAGES" >&2
-				echo "Deb-Cache older 7 days, consider running: ${BASH_SOURCE[0]} update" >&2
-			fi
-			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
-		else
-			echo "Skipping non-existent Packages cache, consider running: ${BASH_SOURCE[0]} update" >&2
-		fi
-		if [[ "$s" == "OpenBSD" ]]; then
-			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
-			pipe_download "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
-		else
-			pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
-			pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
-		fi
+		search "$2"
 	;;
 	purge)
 		if [ $# -eq 1 ] ; then
