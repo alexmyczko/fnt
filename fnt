@@ -11,6 +11,13 @@ set -e
 BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
 TARGET="$BASE/fonts"
 FNTDATA="$BASE/fnt"
+# Fallback if ~/.local/share doesn't exist as if fnt would be the first program
+# writing to it... HAH!
+if ! test -d "$BASE"; then
+	BASE="$HOME"
+	TARGET="$BASE/.fonts"
+	FNTDATA="$BASE/.fnt"
+fi
 FNTINDEXDIR="$FNTDATA/index"
 PACKAGES="$FNTDATA/Packages.xz"
 APACHE="$FNTDATA/APACHE.xz"
