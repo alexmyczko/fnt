@@ -8,8 +8,9 @@ set -e
 # christopher@bocki.com
 
 # Defaults
-TARGET="$HOME/.fonts/"
-FNTDATA="$HOME/.fnt"
+BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
+TARGET="$BASE/fonts"
+FNTDATA="$BASE/fnt"
 FNTINDEXDIR="$FNTDATA/index"
 PACKAGES="$FNTDATA/Packages.xz"
 APACHE="$FNTDATA/APACHE.xz"
@@ -42,8 +43,12 @@ pipe_download(){
 }
 
 search() {
-	xzcat "${PACKAGES}" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
-	xzcat "${APACHE}" "${OFL}" | awk '/^Package: .*'"$1"'.*/ {gsub(/^/, "google-", $2); print $2}'
+	if [ -r "$PACKAGES" ] && [ -r "$APACHE" ] && [ -r "$OFL" ]; then
+		xzcat "${PACKAGES}" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
+		xzcat "${APACHE}" "${OFL}" | awk '/^Package: .*'"$1"'.*/ {gsub(/^/, "google-", $2); print $2}'
+	else
+		echo "Can't find any Data, please run "${BASH_SOURCE[0]}" update and try again."
+	fi
 }
 
 download() {
@@ -120,7 +125,7 @@ deb_handler() {
 
 fnt_install() {
 	local a o p
-	a= o= p=
+	a='' o='' p=''
 	if [ ! -f "${PACKAGES}" ]; then
 		echo "Could not find ${PACKAGES}"
 		echo "Please run ${BASH_SOURCE[0]} update"
@@ -148,18 +153,22 @@ fnt_install() {
 	if ! [ -z "$a" ]; then
 		dir="$(awk '/^Directory: /  {print$2}' <<< $a)"
 		files="$(awk '/^ .*\.?tf$/ {print $2}' <<< $a)"
+		md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< $o)"
 		for file in $files; do
 			download "$GMIRROR/$dir/$file" "$TARGET/$file"
 		done
+		echo "$md5sums" > "$FNTINDEXDIR/google-${dir%%/*}"
 		return
 	else
 		o="$(unxz -c "${OFL}" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
 		if ! [ -z "$o" ]; then
 			dir="$(awk '/^Directory: /  {print$2}' <<< $o)"
 			files="$(awk '/^ .*\.?tf$/ {print $2}' <<< $o)"
+			md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< $o)"
 			for file in $files; do
 				download "$GMIRROR/$dir/$file" "$TARGET/$file"
 			done
+			echo "$md5sums" > "$FNTINDEXDIR/google-${dir%%/*}"
 			return
 		fi
 	fi
@@ -179,7 +188,7 @@ case "$s" in
 		check="curl chafa otfinfo"
 		i="apt"
 		md5="md5sum"
-		TARGET="$HOME/.fonts/"
+#		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
 		fi
@@ -189,20 +198,22 @@ case "$s" in
 		check="curl chafa otfinfo"
 		i="pkg"
 		md5="md5"
-		TARGET="$HOME/.fonts/"
+		TARGET="$HOME/.fonts"
+		FNTDATA="$HOME/.fnt"
 	;;
 	OpenBSD)
 		#echo OpenBSD
 		check="curl chafa otfinfo"
 		i="pkg_add"
 		md5="md5"
-		TARGET="$HOME/.local/share/fonts"
+		#TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
 		#echo Haiku OS
 		check="curl"
 		i="pkgman"
-		TARGET="$HOME/config/non-packaged/data/fonts/"
+		TARGET="$HOME/config/non-packaged/data/fonts"
+		FNTDATA="$HOME/.fnt"
 	;;
 	Windows)
 		#echo Windows
@@ -269,8 +280,9 @@ EOF
 	list|-l)
 		if [ $# -eq 1 ]; then
 			find "$TARGET" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null |
-				while read -r f; do
+				sort | while read -r f; do
 					IDX=$(basename "$(grep -rl "$(basename "$f")" "$FNTINDEXDIR")")
+					if test -z "$IDX"; then IDX=NOT-MANAGED-BY-FNT; fi
 					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
 					unset IDX
 				done
