@@ -157,7 +157,7 @@ fnt_install() {
 		for file in $files; do
 			download "$GMIRROR/$dir/$file" "$TARGET/$file"
 		done
-		echo "$md5sums" > "$FNTINDEXDIR/google-${dir##/*}"
+		echo "$md5sums" > "$FNTINDEXDIR/google-${dir##*/}"
 		return
 	else
 		o="$(unxz -c "${OFL}" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
@@ -168,7 +168,7 @@ fnt_install() {
 			for file in $files; do
 				download "$GMIRROR/$dir/$file" "$TARGET/$file"
 			done
-			echo "$md5sums" > "$FNTINDEXDIR/google-${dir##/*}"
+			echo "$md5sums" > "$FNTINDEXDIR/google-${dir##*/}"
 			return
 		fi
 	fi
