@@ -350,7 +350,7 @@ EOF
 		fi
 		if [ $# -eq 3 ] && [ -w "$FNTINDEXDIR/$2" ] && [ -w "$TARGET/$3" ] ; then
 			if grep -q "$3" "$FNTINDEXDIR/$2"; then
-				rm -fv "${TARGET:?}/${FONT:?}"
+				rm -fv "${TARGET:?}/${3:?}"
 			fi
 		fi
 	;;
