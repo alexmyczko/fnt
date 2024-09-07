@@ -31,7 +31,8 @@ fonts)
         ;;
     list|-l|remove|-r)
         local -a fontindex
-        fontindex=($(fnt list index))
+        fontindex=("${(@f)$(fnt list index)}")
+        [[ -z $fontindex ]] && return 0
         _values \
             "fontindex" $fontindex
         ;;
