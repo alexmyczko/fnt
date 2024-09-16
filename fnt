@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # vim: autoindent noexpandtab
+# shellcheck disable=SC2237
 set -e
 #set -x
 
@@ -8,14 +9,25 @@ set -e
 # christopher@bocki.com
 
 # Defaults
-TARGET="$HOME/.fonts/"
-FNTDATA="$HOME/.fnt"
+BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
+TARGET="$BASE/fonts"
+FNTDATA="$BASE/fnt"
+# Fallback if ~/.local/share doesn't exist as if fnt would be the first program
+# writing to it... HAH!
+if ! test -d "$BASE"; then
+	BASE="$HOME"
+	TARGET="$BASE/.fonts"
+	FNTDATA="$BASE/.fnt"
+fi
 FNTINDEXDIR="$FNTDATA/index"
 PACKAGES="$FNTDATA/Packages.xz"
+APACHE="$FNTDATA/APACHE.xz"
+OFL="$FNTDATA/OFL.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
-# google fonts index
-GINDEX="https://sid.ethz.ch/debian/google-fonts/fonts-main"
+GMIRROR="https://sid.ethz.ch/debian/google-fonts"
+APACHEINDEX="$GMIRROR/APACHE.xz"
+OFLINDEX="$GMIRROR/OFL.xz"
 if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
 	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
 fi
@@ -31,11 +43,20 @@ pipe_download(){
 	local PIPEFILE
 	PIPEDIR="$(mktemp -d)"
 	PIPEFILE="${1%%*/}"
-	if test -z "${PIPEFILE}"; then PIPEFILE=index; fi
-	chmod go-rwx "${PIPEDIR}"
+	if test -z "$PIPEFILE"; then PIPEFILE=index; fi
+	chmod go-rwx "$PIPEDIR"
 	trap 'rm -rf -- "$PIPEDIR"' EXIT
 	download "$1" "$PIPEDIR/$PIPEFILE"
 	cat "$PIPEDIR/$PIPEFILE"
+}
+
+search() {
+	if [ -r "$PACKAGES" ] && [ -r "$APACHE" ] && [ -r "$OFL" ]; then
+		xzcat "$PACKAGES" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
+		xzcat "$APACHE" "$OFL" | awk '/^Package: .*'"$1"'.*/ {gsub(/^/, "google-", $2); print $2}'
+	else
+		echo "Can't find any Data, please run ${BASH_SOURCE[0]} update and try again."
+	fi
 }
 
 download() {
@@ -50,7 +71,7 @@ download() {
 			PROXYURL=${URL/https:/http:}
 			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy "$PROXYURL" |
 				awk -F\' '{print $2}')"; then
-				URL=$PROXYURL;
+							URL=$PROXYURL;
 			fi
 			# shellcheck disable=SC2090,SC2086
 			/usr/lib/apt/apt-helper $LOPTS download-file "$URL" "$2" >/dev/null
@@ -68,30 +89,30 @@ download() {
 		wget -q -O "$URL" "$2"
 	else
 		print "ERROR: neither apt-helper, wget, curl nor fetch is installed" >&2
-		exit 70
+		exit 69
 	fi
 }
 
 deb_handler() {
 	# retrieve font from debian mirror and store infos for removal
 	TMPDIR="$(mktemp -d)"
-	chmod go-rwx "${TMPDIR}"
+	chmod go-rwx "$TMPDIR"
 	trap 'rm -rf -- "$TMPDIR"' EXIT
 	PIT="${TMPDIR}/extract"
-	mkdir -m go-rwx "${PIT}" || { echo "Couldn't eat tartar." ; exit 1 ; }
+	mkdir -m go-rwx "$PIT" || { echo "Couldn't eat tartar." ; exit 73 ; }
 	NAME="$1"
-	INFOS="$(unxz -c "${PACKAGES}" | awk "/^Package: ${NAME}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
+	INFOS="$(unxz -c "$PACKAGES" | awk "/^Package: ${NAME}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
 	VER="$(awk '/^Version: /{print$2}' <<< "$INFOS")"
 	INSTSIZE="$(awk '/^Installed-Size: /{print$2}' <<< "$INFOS")"
 	DOWNSIZE="$(awk '/^Size: /{print$2}' <<< "$INFOS")"
 	FPATH="$(awk '/^Filename: /{print$2}' <<< "$INFOS")"
 	FNAME="$(basename "$FPATH")"
 	MD5SUM="$(awk '/^MD5sum: /{print$2}' <<< "$INFOS") ${FNAME}"
-	echo "Installing ${NAME} ${VER} [${DOWNSIZE} ${INSTSIZE}000 ${MIRROR}/${FPATH}]..."
-	cd "${TMPDIR}" || { echo "Couldn't cd into ${TMPDIR}" ; exit 1 ; }
-	test -z "$(download "${MIRROR}/${FPATH}" "${TMPDIR}/$FNAME")" || { echo "Couldn't retrieve file." ; exit 1 ; }
-	echo "${MD5SUM}" > "${TMPDIR}/${FNAME}.md5"
-	if ${md5} -c "${TMPDIR}/${FNAME}.md5" >/dev/null; then
+	echo "Installing $NAME $VER [${DOWNSIZE} ${INSTSIZE}000 ${MIRROR}/${FPATH}]..."
+	cd "$TMPDIR" || { echo "Couldn't cd into $TMPDIR" ; exit 66 ; }
+	test -z "$(download "${MIRROR}/${FPATH}" "${TMPDIR}/$FNAME")" || { echo "Couldn't retrieve file." ; exit 69 ; }
+	echo "$MD5SUM" > "${TMPDIR}/${FNAME}.md5"
+	if $md5 -c "${TMPDIR}/${FNAME}.md5" >/dev/null; then
 		# deb data
 		DATA="$(ar t "$TMPDIR/$FNAME" | grep '^data\.tar')"
 		mkdir -p "${PIT}/data" && cd "${PIT}/data"
@@ -102,96 +123,140 @@ deb_handler() {
 		CONTROL="$(ar t "$TMPDIR/$FNAME" | grep '^control\.tar')"
 		mkdir -p "${PIT}/control" && cd "${PIT}/control"
 		ar x "${TMPDIR}/$FNAME" "$CONTROL"
-		tar xf "${PIT}/control/$CONTROL"
+		tar xf "${PIT}/control/${CONTROL}"
 		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTINDEXDIR/$NAME"
+		awk -v pkg="$NAME" '{printf "Package: %s File: %s\n", pkg, $2}' "$FNTINDEXDIR/$NAME"
 	else
 		echo "Can't verify md5sum!"
-		exit 1
+		exit 65
 	fi
 }
 
 fnt_install() {
-	if [ ! -f "${PACKAGES}" ]; then
-		echo "Could not find ${PACKAGES}"
+	local a o p
+	a='' o='' p=''
+	if [ ! -f "$PACKAGES" ]; then
+		echo "Could not find $PACKAGES"
 		echo "Please run ${BASH_SOURCE[0]} update"
 		# could also just run itself with update...
 		# but apt doesn't do that either :)
-		exit 1
+		exit 75
 	fi
 	if [ ! $# -eq 2 ]; then
 		echo "No fontname supplied."
-		echo "Example: ${BASH_SOURCE[0]} install agave"
-		exit 1
+		echo "Usage: ${BASH_SOURCE[0]} install agave"
+		exit 64
 	fi
 	FNTMATCH=$2
-	if [ ! -d "${TARGET}" ]; then
-		mkdir -p "${TARGET}"
+	if [ ! -d "$TARGET" ]; then
+		mkdir -p "$TARGET"
 	fi
 	# look for first font match
-	p="$(unxz -c "${PACKAGES}" | awk '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
-	if [ -z "$p" ]; then
-		q=$(pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$FNTMATCH" | head -1)
-		s=$(pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$FNTMATCH" | head -1)
-		if [ -z "$q" ] && [ -z "$s" ]; then
-			echo "Font \"$FNTMATCH\" not found"
-			exit 1
-		else
-			FNTMATCH="${FNTMATCH#google-*}"
-			echo "Installing google-${FNTMATCH}"
-			rm -f "$FNTINDEXDIR/google-$FNTMATCH"
-			# here comes the google web font installer part using grep '\..tf'
-			pipe_download "$GINDEX/ofl/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-				download "${GINDEX}/ofl/${FNTMATCH}/$f" "$TARGET/$f"
-				${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' >> "$FNTINDEXDIR/google-$FNTMATCH"
+	p="$(unxz -c "$PACKAGES" | awk '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
+	if !  [ -z "$p" ]; then
+		deb_handler "$p"
+		return
+	fi
+	FNTMATCH=${FNTMATCH/google-/}
+	a="$(unxz -c "$APACHE" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
+	if ! [ -z "$a" ]; then
+		dir="$(awk '/^Directory: /  {print$2}' <<< "$a")"
+		files="$(awk '/^ .*\.?tf$/ {print $2}' <<< "$a")"
+		md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$a")"
+		for file in $files; do
+			download "${GMIRROR}/${dir}/${file}" "${TARGET}/${file}"
+			echo "Package: $FNTMATCH File: $file"
+		done
+		echo "$md5sums" > "${FNTINDEXDIR}/google-${dir##*/}"
+		return
+	else
+		o="$(unxz -c "$OFL" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
+		if ! [ -z "$o" ]; then
+			dir="$(awk '/^Directory: /  {print$2}' <<< "$o")"
+			files="$(awk '/^ .*\.?tf$/ {print $2}' <<< "$o")"
+			md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$o")"
+			for file in $files; do
+				download "${GMIRROR}/${dir}/${file}" "${TARGET}/${file}"
+				echo "Package: $FNTMATCH File: $file"
 			done
-			pipe_download "$GINDEX/apache/${FNTMATCH}/" |grep "a href" |grep "\..tf" |sed 's,.*tf.>,,' | sed 's,</..*,,' | while read -r f; do
-				download "${GINDEX}/apache/${FNTMATCH}/$f" "$TARGET/$f"
-				${md5} "$TARGET/$f" | sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' >> "$FNTINDEXDIR/google-$FNTMATCH"
-			done
-		exit 0
+			echo "$md5sums" > "${FNTINDEXDIR}/google-${dir##*/}"
+			return
 		fi
 	fi
-deb_handler "$p"
+}
+
+preview() {
+	PREVIEW="${FNTDATA}/preview.png"
+	PREVIEWURI="https://screenshots.debian.net/screenshot/fonts-$1"
+	if download "$PREVIEWURI" "${PREVIEW}"; then
+		# if we get nothing / "this picture is not available" pic
+		if [ "$($md5 "$PREVIEW" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
+			PREVIEWURI="https://sid.ethz.ch/fonts/$1/preview.png"
+			if download "$PREVIEWURI" "$PREVIEW"; then
+				if ! file --brief --mime-type "$PREVIEW" |grep -q 'image/png'; then
+					echo "Couldn't retrieve a preview for ${1}."
+					exit 69
+				fi
+			fi
+		fi
+		if ! command -v chafa &>/dev/null; then
+			echo "Warning: chafa not found. Use $i install chafa to get rid of me." >&2
+			echo -e "\v\t${PREVIEWURI}\v"
+			exit 0
+		else
+			if file --brief --mime-type "$PREVIEW" |grep -q 'image/png'; then
+				chafa -c 240 -w 9 -O 9 -p on --symbols all "$PREVIEW" 2>/dev/null && PRINTED=1
+				echo "$1: $PREVIEWURI"
+			fi
+		fi
+	fi
+	if [ "$PRINTED" != "1" ]; then
+		echo "Couldn't display a preview for $1." >&2
+		return 69
+	fi
 }
 
 case "$s" in
 	Darwin)
 		#echo macOS
-		check="curl brew otfinfo chafa"
+		check="curl brew otfinfo"
 		# otfinfo comes with lcdf-typetools
 		i="brew"
 		md5="md5sum"
 		TARGET="$HOME/Library/Fonts/"
+		FNTDATA="$HOME/.fnt"
 	;;
 	Linux|GNU/kFreeBSD|GNU)
 		#echo Linux
-		check="curl chafa otfinfo"
+		check="curl otfinfo"
 		i="apt"
 		md5="md5sum"
-		TARGET="$HOME/.fonts/"
+#		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
 		fi
 	;;
 	FreeBSD)
 		#echo FreeBSD
-		check="curl chafa otfinfo"
+		check="curl otfinfo"
 		i="pkg"
 		md5="md5"
-		TARGET="$HOME/.fonts/"
+		TARGET="$HOME/.fonts"
+		FNTDATA="$HOME/.fnt"
 	;;
 	OpenBSD)
 		#echo OpenBSD
-		check="curl chafa otfinfo"
+		check="curl otfinfo"
 		i="pkg_add"
 		md5="md5"
-		TARGET="$HOME/.local/share/fonts"
+		#TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
 		#echo Haiku OS
 		check="curl"
 		i="pkgman"
-		TARGET="$HOME/config/non-packaged/data/fonts/"
+		TARGET="$HOME/config/non-packaged/data/fonts"
+		FNTDATA="$HOME/.fnt"
 	;;
 	Windows)
 		#echo Windows
@@ -208,9 +273,13 @@ esac
 for a in $check; do
 	if ! command -v "$a" &>/dev/null; then
 		echo "$a not found, please use $i to install it."
-		exit 1
+		exit 69
 	fi
 done
+
+cat=$(command -v lolcat || :)
+PATH="/usr/games:$PATH"
+if test -z "$cat"; then cat=$(command -v cat); fi
 
 case "$1" in
 	help|-h)
@@ -230,30 +299,38 @@ EOF
 	;;
 
 	update|-u)
-		echo Updating...
-		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES"
-		download "$INDEX" "$PACKAGES"
+		echo -n "Updating..."
+		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES" "$APACHE" "$OFL"
+		PACKAGESTMP=$(mktemp)
+		download "$INDEX" "$PACKAGESTMP"
+		xzcat "$PACKAGESTMP" | awk '/^Package: fonts-/,/^$/' > "${PACKAGES%.xz}";
+		xz "${PACKAGES%.xz}" ; rm "$PACKAGESTMP" ; echo -n " ${PACKAGES##*/}... "
+		download "$APACHEINDEX" "$APACHE"; echo -n " ${APACHE##*/}.. "
+		download "$OFLINDEX" "$OFL"; echo -n " ${OFL##*/}.. "
+		echo -n -e "done!\n"
 	;;
 
 	info)
-		echo "Information..."
 		mkdir -p "$FNTINDEXDIR"
-		INSTALLEDFONTS=$(find "$FNTINDEXDIR" -maxdepth 1 -type f |
-			awk -F/ '{print $NF}')
-					ALLFONTS=$(${BASH_SOURCE[0]} search)
-		printf 'Installed:\tDebian: %i\tGoogle: %i\n' \
-			"$(grep -c '^fonts-' <<< "$INSTALLEDFONTS")" \
-			"$(grep -c '^google-' <<< "$INSTALLEDFONTS")"
-		printf 'Available:\tDebian: %i\tGoogle: %i\n' \
+		INSTALLEDFONTS=$(fnt list index)
+		ALLFONTS=$(${BASH_SOURCE[0]} search)
+		printf 'fnt infos...\nFNTDATA %s (%s)\nTARGET %s (%s)\n' \
+			"$FNTDATA" "$(du -hs "$FNTDATA" |cut -f1)" \
+			"$TARGET" "$(du -hs "$TARGET" |cut -f1)"
+		printf 'Available Fonts from\tDebian: %i\tGoogle: %i\n' \
 			"$(grep -c '^fonts-' <<< "$ALLFONTS")" \
 			"$(grep -c '^google-' <<< "$ALLFONTS")"
+		printf 'Installed Fonts from\tDebian: %i\tGoogle: %i\n' \
+			"$(grep -c '^fonts-' <<< "$INSTALLEDFONTS")" \
+			"$(grep -c '^google-' <<< "$INSTALLEDFONTS")"
 	;;
 
 	list|-l)
 		if [ $# -eq 1 ]; then
-			find "$TARGET" /usr/local/share/fonts -iname '*.?tf' 2>/dev/null |
-				while read -r f; do
+			find "$TARGET" -iname '*.?tf' 2>/dev/null |
+				sort | while read -r f; do
 					IDX=$(basename "$(grep -rl "$(basename "$f")" "$FNTINDEXDIR")")
+					if test -z "$IDX"; then IDX=NOT-MANAGED-BY-FNT; fi
 					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
 					unset IDX
 				done
@@ -273,26 +350,13 @@ EOF
 	preview|-p)
 		if [ $# -ne 2 ]; then
 			echo "No fontname supplied."
-			echo "Example: ${BASH_SOURCE[0]} preview agave"
-			exit 1
+			echo "Usage: ${BASH_SOURCE[0]} preview agave"
+			exit 64
 		fi
 		mkdir -p "$FNTINDEXDIR"
 		rm -f "${FNTDATA}/preview.png"
-		PRINTED=
-		FNTMATCH="${2/(fonts|google)-/}"
-		if download "https://screenshots.debian.net/screenshot/fonts-$FNTMATCH" "${FNTDATA}/preview.png"; then
-			# if we get nothing / "this picture is not available" pic
-			if [ "$($md5 "${FNTDATA}/preview.png" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
-				if download "https://sid.ethz.ch/fonts/$FNTMATCH/preview.png" "${FNTDATA}/preview.png"; then
-					chafa -c 240 -w 9 -O 9 -p on --symbols all "${FNTDATA}/preview.png" 2>/dev/null && PRINTED=1
-				fi
-			else
-				chafa -c 240 -w 9 -O 9 -p on --symbols all "${FNTDATA}/preview.png" 2>/dev/null && PRINTED=1
-			fi
-		fi
-		if [ "$PRINTED" != "1" ]; then
-			echo "Couldn't retrieve a preview."
-		fi
+		FNTMATCH="$(sed -E 's/^(fonts|google)-//g' <<< "$2")"
+		preview "$FNTMATCH"
 	;;
 	install|-i)
 		fnt_install "$@"
@@ -303,34 +367,23 @@ EOF
 			echo "To get a list of indexes: ${BASH_SOURCE[0]} list index"
 		fi
 		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
-			awk '{print$2}' "$FNTINDEXDIR/$" |while read -r FONTFILE; do
+			if [ -e "$FNTINDEXDIR/$2" ]; then
+			awk '{print$2}' "$FNTINDEXDIR/$2" |while read -r FONTFILE; do
 			${BASH_SOURCE[0]} remove "$2" "$FONTFILE"
 		done
+		else
+			echo "Couldn't find the font $2"
+			fi
 		rm -fv "${FNTINDEXDIR:?}/$2"
 		fi
 		if [ $# -eq 3 ] && [ -w "$FNTINDEXDIR/$2" ] && [ -w "$TARGET/$3" ] ; then
 			if grep -q "$3" "$FNTINDEXDIR/$2"; then
-				rm -fv "${TARGET:?}/${FONT:?}"
+				rm -fv "${TARGET:?}/${3:?}"
 			fi
 		fi
 	;;
 	search|-s)
-		if [ -f "${PACKAGES}" ]; then
-			if test -n "$(find "$PACKAGES" -type f -mtime +6)"; then
-				stat "$PACKAGES" >&2
-				echo "Deb-Cache older 7 days, consider running: ${BASH_SOURCE[0]} update" >&2
-			fi
-			unxz -c "${PACKAGES}" | awk '/^Package: fonts-'"$2"'/ {gsub(/^Package: /,"");print;}'
-		else
-			echo "Skipping non-existent Packages cache, consider running: ${BASH_SOURCE[0]} update" >&2
-		fi
-		if [[ "$s" == "OpenBSD" ]]; then
-			pipe_download "$GINDEX/ofl/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
-			pipe_download "$GINDEX/apache/" |ggrep "a href" |gsed 's,.*">,google-,;s,/.*,,;s,<$,,g' |ggrep -v "\.\.$" | awk "/$2/"
-		else
-			pipe_download "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
-			pipe_download "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,;s,<$,,g' |grep -v "\.\.$" | awk "/$2/"
-		fi
+		search "$2"
 	;;
 	purge)
 		if [ $# -eq 1 ] ; then
@@ -346,11 +399,13 @@ EOF
 		echo "This fnt does not have cow powers."
 	;;
 	wak)
-		echo ' _()< wak wak'
-		echo '(__)'
+		$cat << 'EOF'
+ _()< wak wak
+ (__)
+EOF
 	;;
 	quak)
-		cat << 'EOF'
+		$cat << 'EOF'
  _______
 < QUAK? >
  -------
@@ -364,10 +419,7 @@ EOF
 EOF
 	;;
 	*)
-		lolcat=$(command -v cat)
-		PATH="/usr/games:$PATH"
-		if command -v lolcat>/dev/null; then lolcat=$(command -v lolcat); fi
-		$lolcat << 'EOF'
+		$cat << 'EOF'
    .d888
   d88P"           888
   888             888

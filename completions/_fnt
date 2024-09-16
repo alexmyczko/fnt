@@ -8,7 +8,7 @@ case $state in
 mode)
     _values \
         $state \
-        {update,-u}"[updates the font package index of debian sid]" \
+        {update,-u}"[update fnt package cache]" \
         {list,-l}"[lists installed fonts with glyphcount per font]" \
         info"[information about how many fonts can be installed]" \
         {help,-h}"[show help]" \
@@ -31,7 +31,8 @@ fonts)
         ;;
     list|-l|remove|-r)
         local -a fontindex
-        fontindex=($(fnt list index))
+        fontindex=("${(@f)$(fnt list index)}")
+        [[ -z $fontindex ]] && return 0
         _values \
             "fontindex" $fontindex
         ;;
