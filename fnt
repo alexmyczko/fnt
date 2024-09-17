@@ -331,7 +331,7 @@ EOF
 				sort | while read -r f; do
 					IDX=$(basename "$(grep -rl "$(basename "$f")" "$FNTINDEXDIR")")
 					if test -z "$IDX"; then IDX=NOT-MANAGED-BY-FNT; fi
-					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l)]"
+					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l | awk '{print $1}')]"
 					unset IDX
 				done
 		fi
