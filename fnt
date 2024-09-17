@@ -400,7 +400,7 @@ EOF
 	;;
 	wak)
 		$cat << 'EOF'
- _()< wak wak
+  _()< wak wak
  (__)
 EOF
 	;;
