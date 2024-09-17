@@ -1,4 +1,4 @@
-.TH man 1 "12 Aug 2023" "1.5" "font downloader and manager"
+.TH man 1 "12 Aug 2023" "1.7" "font downloader and manager"
 .SH NAME
 fnt \- download and install fonts
 .SH SYNOPSIS
@@ -12,6 +12,9 @@ Debian sid, and Google Web Fonts.
 .I fnt update
 update font index.
 .TP
+.I fnt info
+show available/installed font summary.
+.TP
 .I fnt search aga
 search for fonts named aga.
 .TP
@@ -20,6 +23,9 @@ install the font called agave.
 .TP
 .I fnt preview agave
 show a text-based preview of the font called agave.
+.TP
+.I fnt remove agave
+remove the font files from the package agave.
 .TP
 .I fnt list
 list installed fonts with glyphcount.
