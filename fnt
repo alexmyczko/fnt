@@ -299,15 +299,15 @@ EOF
 	;;
 
 	update|-u)
-		echo -n "Updating..."
+		echo -n "Updating... "
 		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES" "$APACHE" "$OFL"
 		PACKAGESTMP=$(mktemp)
 		download "$INDEX" "$PACKAGESTMP"
 		xzcat "$PACKAGESTMP" | awk '/^Package: fonts-/,/^$/' > "${PACKAGES%.xz}";
-		xz "${PACKAGES%.xz}" ; rm "$PACKAGESTMP" ; echo -n " ${PACKAGES##*/}... "
-		download "$APACHEINDEX" "$APACHE"; echo -n " ${APACHE##*/}.. "
-		download "$OFLINDEX" "$OFL"; echo -n " ${OFL##*/}.. "
-		echo -n -e "done!\n"
+		xz "${PACKAGES%.xz}" ; rm "$PACKAGESTMP" ; echo -n "${PACKAGES##*/}... "
+		download "$APACHEINDEX" "$APACHE"; echo -n "${APACHE##*/}... "
+		download "$OFLINDEX" "$OFL"; echo -n "${OFL##*/}... "
+		echo -n -e "done.\n"
 	;;
 
 	info)
