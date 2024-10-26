@@ -190,8 +190,8 @@ fnt_install() {
 render_preview() {
 	PREVIEW="$1"
 	_app=(
+chafa="-w 9"
 timg=""
-chafa="-c 240 -w 9 -O 9 -p on --symbols all"
 )
 	for a in "${_app[@]}"; do
 		bin=${a%=*}
