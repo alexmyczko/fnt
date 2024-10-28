@@ -38,6 +38,8 @@ else
 	s=$(uname -s)
 fi
 
+check_com() { if ! command -v "$1" &> /dev/null; then return 1; fi ; }
+
 # Pipelines
 pipe_download(){
 	local PIPEFILE
@@ -185,6 +187,32 @@ fnt_install() {
 	fi
 }
 
+render_preview() {
+	PREVIEW="$1"
+	_app=(
+chafa="-w 9"
+timg=""
+)
+	for a in "${_app[@]}"; do
+		bin=${a%=*}
+		opt=${a#*=}
+		if check_com "$bin"; then
+			if file --brief --mime-type "$PREVIEW" |grep -q 'image/png'; then
+				# shellcheck disable=SC2086
+				$bin $opt "$PREVIEW"
+				return 0
+			fi
+			return 0
+		else
+			missing=( "${missing[@]}" "$bin" )
+		fi
+	done
+	echo "Warning: ${missing[*]} not available. Please install one of them." >&2
+	echo -e "\v\t${PREVIEWURI}\v"
+	return 69
+}
+
+
 preview() {
 	PREVIEW="${FNTDATA}/preview.png"
 	PREVIEWURI="https://screenshots.debian.net/screenshot/fonts-$1"
@@ -199,15 +227,9 @@ preview() {
 				fi
 			fi
 		fi
-		if ! command -v chafa &>/dev/null; then
-			echo "Warning: chafa not found. Use $i install chafa to get rid of me." >&2
-			echo -e "\v\t${PREVIEWURI}\v"
-			exit 0
-		else
-			if file --brief --mime-type "$PREVIEW" |grep -q 'image/png'; then
-				chafa -c 240 -w 9 -O 9 -p on --symbols all "$PREVIEW" 2>/dev/null && PRINTED=1
-				echo "$1: $PREVIEWURI"
-			fi
+		if render_preview "$PREVIEW"; then
+			PRINTED=1
+			echo "$1: $PREVIEWURI"
 		fi
 	fi
 	if [ "$PRINTED" != "1" ]; then
