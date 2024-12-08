@@ -7,7 +7,7 @@ set -e
 # APT but only for fonts
 # alex@aiei.ch
 # christopher@bocki.com
-
+VERSION=1.8
 # Defaults
 BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
 TARGET="$BASE/fonts"
@@ -241,18 +241,18 @@ preview() {
 case "$s" in
 	Darwin)
 		#echo macOS
-		check="curl brew otfinfo"
+		md5="md5sum"
+		check="$md5 curl brew otfinfo ar"
 		# otfinfo comes with lcdf-typetools
 		i="brew"
-		md5="md5sum"
 		TARGET="$HOME/Library/Fonts/"
 		FNTDATA="$HOME/.fnt"
 	;;
 	Linux|GNU/kFreeBSD|GNU)
 		#echo Linux
-		check="curl otfinfo"
-		i="apt"
 		md5="md5sum"
+		check="$md5 ar awk curl file otfinfo tar unxz xzcat"
+		i="apt"
 #		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
@@ -260,22 +260,22 @@ case "$s" in
 	;;
 	FreeBSD)
 		#echo FreeBSD
-		check="curl otfinfo"
-		i="pkg"
 		md5="md5"
+		check="$md5 curl otfinfo ar"
+		i="pkg"
 		TARGET="$HOME/.fonts"
 		FNTDATA="$HOME/.fnt"
 	;;
 	OpenBSD)
 		#echo OpenBSD
-		check="curl otfinfo"
-		i="pkg_add"
 		md5="md5"
+		check="$md5 curl otfinfo ar"
+		i="pkg_add"
 		#TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
 		#echo Haiku OS
-		check="curl"
+		check="curl ar"
 		i="pkgman"
 		TARGET="$HOME/config/non-packaged/data/fonts"
 		FNTDATA="$HOME/.fnt"
@@ -336,7 +336,8 @@ EOF
 		mkdir -p "$FNTINDEXDIR"
 		INSTALLEDFONTS=$(fnt list index)
 		ALLFONTS=$(${BASH_SOURCE[0]} search)
-		printf 'fnt infos...\nFNTDATA %s (%s)\nTARGET %s (%s)\n' \
+		printf 'fnt v:%s infos...\nFNTDATA %s (%s)\nTARGET %s (%s)\n' \
+			"$VERSION" \
 			"$FNTDATA" "$(du -hs "$FNTDATA" |cut -f1)" \
 			"$TARGET" "$(du -hs "$TARGET" |cut -f1)"
 		printf 'Available Fonts from\tDebian: %i\tGoogle: %i\n' \
@@ -441,8 +442,8 @@ EOF
 EOF
 	;;
 	*)
-		$cat << 'EOF'
-   .d888
+		$cat << EOF
+   .d888   $VERSION
   d88P"           888
   888             888
 .d88888 888888b. d888888
