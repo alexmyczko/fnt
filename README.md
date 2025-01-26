@@ -15,7 +15,7 @@ Script to update the google-fonts mirror and create Index files for fnt.
 
 # Index files for fnt 
 
-- [APCAHE.xz](APACHE.xz)
+- [APACHE.xz](APACHE.xz)
 - [OFL.xz](OFL.xz)
 
 # [LICENSE](LICENSE)
