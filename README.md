@@ -12,3 +12,11 @@
 # update.sh
 
 Script to update the google-fonts mirror and create Index files for fnt.
+
+# Files
+
+- APCAHE.xz
+- OFL.xz
+
+# LICENSE
+
