@@ -9,7 +9,7 @@
   888   888  888   "Y888
 ```
 
-# update.sh
+# [update.sh](update.sh)
 
 Script to update the google-fonts mirror and create Index files for fnt.
 
