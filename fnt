@@ -338,8 +338,8 @@ EOF
 		ALLFONTS=$(${BASH_SOURCE[0]} search)
 		printf 'fnt v:%s infos...\nFNTDATA %s (%s)\nTARGET %s (%s)\n' \
 			"$VERSION" \
-			"$FNTDATA" "$(du -hs "$FNTDATA" |cut -f1)" \
-			"$TARGET" "$(du -hs "$TARGET" |cut -f1)"
+			"$FNTDATA" "$(du -hs "$FNTDATA" 2>/dev/null|cut -f1)" \
+			"$TARGET" "$(du -hs "$TARGET" 2>/dev/null|cut -f1)"
 		printf 'Available Fonts from\tDebian: %i\tGoogle: %i\n' \
 			"$(grep -c '^fonts-' <<< "$ALLFONTS")" \
 			"$(grep -c '^google-' <<< "$ALLFONTS")"
