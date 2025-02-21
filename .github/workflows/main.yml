@@ -1,0 +1,41 @@
+---
+name: Update deb822 style cache files
+
+on:
+  push:
+  check_run:
+  schedule:
+    - cron: "30 23 * * *"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'alexmyczko/fnt'
+          ref: 'mirror'
+      - name: Restore
+        id: cache-primes-restore
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ runner.os }}-primes
+          path: |
+            fonts-main
+      - name: generate index
+        run: |
+           ./update.sh
+           git config --global user.email "robot@fnt.noreply.github.com"
+           git config --global user.name "fnt index"
+           git add OFL.xz APACHE.xz || :
+           git status -s -b -u
+           if git commit -m $(date -Im); then
+             git push
+           fi
+      - name: Save
+        id: cache-primes-save
+        if: always() && steps.cache-primes-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          key: ${{ steps.cache-primes-restore.outputs.cache-primary-key }}
+          path: |
+            fonts-main
