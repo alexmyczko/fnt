@@ -17,7 +17,7 @@ SOURCE='https://github.com/google/fonts/archive/refs/heads/main.tar.gz'
 # git clone https://github.com/google/fonts --single-branch fonts-main
 #
 if ! git -C "$DIR"/fonts-main pull --force --quiet; then
-  if ! git clone https://github.com/google/fonts --single-branch fonts-main; then
+  if ! git clone --depth 1 https://github.com/google/fonts --single-branch fonts-main; then
     # Doesn't seem to be a git dir..
     TMPD=$(mktemp -d)
     rm -Rfv fonts-main
