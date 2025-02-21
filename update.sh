@@ -11,6 +11,7 @@ DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd); cd "${DIR:?}"
 #SCRIPT=$(basename "$0"); # echo "$DIR/$SCRIPT"
 # Source if not already a git directory
 SOURCE='https://github.com/google/fonts/archive/refs/heads/main.tar.gz'
+GMIRROR="https://github.com/google/fonts/raw/refs/heads/main"
 # Fucking download doesn't support timestamps..
 # Shouldn't that be a git repo instead of downloading it every day?!
 # mv fonts-main{.old};
@@ -41,7 +42,8 @@ for FOLDER in ofl apache; do
   INDEX="$(echo "$FOLDER" |tr 'a-z' 'A-Z')"
   for FONTPATH in fonts-main/"$FOLDER"/*; do
     {
-      printf 'Package: %s\nDirectory: %s\nFiles:\n' "$(basename "$FONTPATH")" "$FONTPATH"
+      printf 'Package: %s\nURL: %s\nFiles:\n' \
+        "$(basename "$FONTPATH")" "$GMIRROR/${FONTPATH##fonts-main/}"
       for FONTFILE in "$FONTPATH"/*.?tf; do
         printf ' %s\n' "$(md5sum "$FONTFILE" |sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p')"
       done
