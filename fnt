@@ -7,7 +7,7 @@ set -e
 # APT but only for fonts
 # alex@aiei.ch
 # christopher@bocki.com
-VERSION=1.8
+VERSION=1.9
 # Defaults
 BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
 TARGET="$BASE/fonts"
@@ -25,9 +25,9 @@ APACHE="$FNTDATA/APACHE.xz"
 OFL="$FNTDATA/OFL.xz"
 MIRROR="https://deb.debian.org/debian"
 INDEX="$MIRROR/dists/sid/main/binary-all/Packages.xz"
-GMIRROR="https://sid.ethz.ch/debian/google-fonts"
-APACHEINDEX="$GMIRROR/APACHE.xz"
-OFLINDEX="$GMIRROR/OFL.xz"
+GINDEX="https://alexmyczko.github.io/fnt"
+APACHEINDEX="$GINDEX/APACHE.xz"
+OFLINDEX="$GINDEX/OFL.xz"
 if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
 	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
 fi
@@ -162,26 +162,28 @@ fnt_install() {
 	FNTMATCH=${FNTMATCH/google-/}
 	a="$(unxz -c "$APACHE" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
 	if ! [ -z "$a" ]; then
-		dir="$(awk '/^Directory: /  {print$2}' <<< "$a")"
+		url=$(awk '/^URL:/ {print$2}' <<< "$a")
+		dir="${url##*/}"
 		files="$(awk '/^ .*\.?tf$/ {print $2}' <<< "$a")"
 		md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$a")"
 		for file in $files; do
-			download "${GMIRROR}/${dir}/${file}" "${TARGET}/${file}"
+			download "${url}/${file}" "${TARGET}/${file}"
 			echo "Package: $FNTMATCH File: $file"
 		done
-		echo "$md5sums" > "${FNTINDEXDIR}/google-${dir##*/}"
+		echo "$md5sums" > "${FNTINDEXDIR}/google-${dir}"
 		return
 	else
 		o="$(unxz -c "$OFL" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
 		if ! [ -z "$o" ]; then
-			dir="$(awk '/^Directory: /  {print$2}' <<< "$o")"
+			url="$(awk '/^URL:/ {print$2}' <<< "$o")"
+			dir="${url##*/}"
 			files="$(awk '/^ .*\.?tf$/ {print $2}' <<< "$o")"
 			md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$o")"
 			for file in $files; do
-				download "${GMIRROR}/${dir}/${file}" "${TARGET}/${file}"
+				download "${url}/${file}" "${TARGET}/${file}"
 				echo "Package: $FNTMATCH File: $file"
 			done
-			echo "$md5sums" > "${FNTINDEXDIR}/google-${dir##*/}"
+			echo "$md5sums" > "${FNTINDEXDIR}/google-${dir}"
 			return
 		fi
 	fi
@@ -309,14 +311,14 @@ case "$1" in
 Syntax: fnt [ update | list [indexfile]| info | help ]
         fnt [ install | remove | preview | search ] font
 
-update|-u  updates the font package index of debian sid
-list|-l    lists installed fonts with glyphcount per font
-info       information about how many fonts can be installed and are available
 help|-h    this help
+info       information about how many fonts can be installed and are available
 install|-i install a font
-remove|-r  remove a font
+list|-l    lists installed fonts with glyphcount per font
 preview|-p preview a font
+remove|-r  remove a font
 search|-s  search for font
+update|-u  updates the font package index of debian sid
 EOF
 	;;
 
@@ -338,8 +340,8 @@ EOF
 		ALLFONTS=$(${BASH_SOURCE[0]} search)
 		printf 'fnt v:%s infos...\nFNTDATA %s (%s)\nTARGET %s (%s)\n' \
 			"$VERSION" \
-			"$FNTDATA" "$(du -hs "$FNTDATA" 2>/dev/null|cut -f1)" \
-			"$TARGET" "$(du -hs "$TARGET" 2>/dev/null|cut -f1)"
+			"$FNTDATA" "$(du -hs "$FNTDATA" 2>/dev/null |cut -f1)" \
+			"$TARGET" "$(du -hs "$TARGET" 2>/dev/null |cut -f1)"
 		printf 'Available Fonts from\tDebian: %i\tGoogle: %i\n' \
 			"$(grep -c '^fonts-' <<< "$ALLFONTS")" \
 			"$(grep -c '^google-' <<< "$ALLFONTS")"
