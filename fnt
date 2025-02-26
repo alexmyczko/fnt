@@ -386,8 +386,8 @@ EOF
 	;;
 	remove|-r)
 		if [ $# -eq 1 ] ; then
-			echo "Usage: ${BASH_SOURCE[0]} indexfile"
-			echo "To get a list of indexes: ${BASH_SOURCE[0]} list index"
+			echo "Usage: ${BASH_SOURCE[0]} remove fonts-agave agave-b-autohinted.ttf"
+			echo "To get a list of indexes/files: ${BASH_SOURCE[0]} list [index|fonts-agave]"
 		fi
 		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
 			if [ -e "$FNTINDEXDIR/$2" ]; then
