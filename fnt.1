@@ -21,13 +21,17 @@ search for fonts named aga.
 .I fnt install agave
 install the font called agave.
 .TP
+.I fnt purge
+deletes all data in FNTDATA and TARGET.
+See \fBfnt info\fP for more information.
+.TP
 .I fnt preview agave
 show a text-based preview of the font called agave.
 .TP
-.I fnt remove agave
-remove the font files from the package agave.
+.I fnt remove agave [agave-boo-autohinted.ttf]
+remove a font package or selected fontfiles.
 .TP
-.I fnt list
+.I fnt list [\fIindex | fonts-agave\fP]
 list installed fonts with glyphcount.
 .SH SEE ALSO
 birdfont(1),
