@@ -135,10 +135,6 @@ The preview mode works using https://github.com/hpjansson/chafa and https://scre
 
 Create your own with http://shell.aiei.ch/typography/
 
-# Online service
-
-http://sid.ethz.ch/fonts/
-
 # Missing a font?
 
 Feel free to create an issue, if the font comes with sources and its license is DFSG compliant, I'm happy to package it for a dollar. Free if I like it.
