@@ -103,7 +103,7 @@ deb_handler() {
 	PIT="${TMPDIR}/extract"
 	mkdir -m go-rwx "$PIT" || { echo "Couldn't eat tartar." ; exit 73 ; }
 	NAME="$1"
-	INFOS="$(unxz -c "$PACKAGES" | awk "/^Package: ${NAME}$/,/^$/" | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
+	INFOS="$(unxz -c "$PACKAGES" | sed -n '/^Package: '"$NAME"'$/,/^$/ {H}; /^Package: '"$NAME"'$/ h; $ {g;p}' | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
 	VER="$(awk '/^Version: /{print$2}' <<< "$INFOS")"
 	INSTSIZE="$(awk '/^Installed-Size: /{print$2}' <<< "$INFOS")"
 	DOWNSIZE="$(awk '/^Size: /{print$2}' <<< "$INFOS")"
