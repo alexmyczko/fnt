@@ -1,5 +1,5 @@
 ---
-name: Update deb822 style cache files
+name: Update google-fonts index
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: 'alexmyczko/fnt'
+          repository: "${{ github.repository }}"
           ref: 'mirror'
       - name: Restore
         id: cache-primes-restore
@@ -21,10 +21,12 @@ jobs:
           key: ${{ runner.os }}-primes
           path: |
             fonts-main
-      - name: generate index
+      - name: Install imagemagick and file
+        run: sudo apt-get update -qq && sudo apt-get install -qq imagemagick file
+      - name: generate index and previews
         run: |
            ./update.sh
-           git config --global user.email "robot@fnt.noreply.github.com"
+           git config --global user.email "${{github.repository_owner}}@users.noreply.github.com"
            git config --global user.name "fnt index"
            git add OFL.xz APACHE.xz || :
            git status -s -b -u
