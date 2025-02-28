@@ -127,7 +127,7 @@ deb_handler() {
 		ar x "${TMPDIR}/$FNAME" "$CONTROL"
 		tar xf "${PIT}/control/${CONTROL}"
 		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTINDEXDIR/$NAME"
-		awk -v pkg="$NAME" '{printf "Package: %s File: %s\n", pkg, $2}' "$FNTINDEXDIR/$NAME"
+		awk -v pkg="$NAME" '$1="";{printf "Package: %s File:%s\n", pkg, $NFR}' "$FNTINDEXDIR/$NAME"
 	else
 		echo "Can't verify md5sum!"
 		exit 65
@@ -365,8 +365,9 @@ EOF
 		fi
 		if [ $# -eq 2 ] && [ -r "$FNTINDEXDIR/$2" ]; then
 			# shellcheck disable=SC2046
-			find $(awk -v target="$TARGET" \
-				'{printf "%s/%s ", target, $2}' "$FNTINDEXDIR/$2") |
+			awk -v target="$TARGET" wk -v target="$TARGET" \
+				'$1="";{printf "%s/%s\n", target, substr($0,2)}' \
+				"$FNTINDEXDIR/$2" |
 				while read -r font; do
 					echo "$(basename "${font}") [$(otfinfo -u "$font" 2>/dev/null | wc -l)]"
 				done
