@@ -365,7 +365,7 @@ EOF
 		fi
 		if [ $# -eq 2 ] && [ -r "$FNTINDEXDIR/$2" ]; then
 			# shellcheck disable=SC2046
-			awk -v target="$TARGET" wk -v target="$TARGET" \
+			awk -v target="$TARGET" \
 				'$1="";{printf "%s/%s\n", target, substr($0,2)}' \
 				"$FNTINDEXDIR/$2" |
 				while read -r font; do
