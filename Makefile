@@ -1,4 +1,4 @@
-ROOT := $(lastword $(MAKEFILE_LIST))
+ROOT := $(dir $(lastword $(MAKEFILE_LIST)))
 BINDIR=/usr/bin
 MANDIR=/usr/share/man
 ZCOMPDIR=/usr/local/share/zsh/site-functions
