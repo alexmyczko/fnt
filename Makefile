@@ -1,7 +1,9 @@
+ROOT := $(lastword $(MAKEFILE_LIST))
 BINDIR=/usr/bin
 MANDIR=/usr/share/man
 ZCOMPDIR=/usr/local/share/zsh/site-functions
-VERSION=1.7
+BIN=$(ROOT)/fnt
+VERSION := $(shell sed -n 's/^VERSION\s*=\s*\(.*\)/\1/p' $(BIN))
 
 all:
 	@echo make install          to install the software
