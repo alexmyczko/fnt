@@ -106,15 +106,15 @@ agave-r-autohinted.ttf [2443]
 
 Randomly display a preview every ten seconds:
 
-`while (clear); do fnt preview $(fnt search | shuf -n1 | sed "s,google-,,;s,fonts-,,"); sleep 10; done`
+`while (clear); do fnt preview $(fnt search | shuf -n1) ; sleep 10; done`
 
-If you want to install all available fonts, you could run something like this:
+If you want to install all available fonts from Debian, you could run something like this:
 
-`for a in $(fnt search |grep ^fonts- |sed s,fonts-,,); do fnt install $a; done`
+`while read -r font; do echo fnt install $font ; done < <(fnt search |grep -v "^google")`
 
 You end up with ~2700 font files (~500 fonts), taking up 1.6 GB.
 
-`for a in $(fnt search |grep ^google- |sed s,google-,,); do fnt install $a; done`
+`for a in $(fnt search |grep "^google-"); do fnt install $a; done`
 
 You end up with ~4200 font files (~1600 fonts), taking up 1.4 GB.
 
