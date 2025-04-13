@@ -10,19 +10,19 @@ all:
 	@echo make uninstall        to remove the software
 
 install:
-	# No direct dir creation because of *BSD
-	install -d $(DESTDIR)/$(BINDIR)
-	install -m 755 fnt $(DESTDIR)/$(BINDIR)/
-	install -d $(DESTDIR)/$(MANDIR)/man1
-	install -m 644 fnt.1 $(DESTDIR)/$(MANDIR)/man1/
-	gzip -9 $(DESTDIR)/$(MANDIR)/man1/fnt.1
-	install -d $(DESTDIR)/$(ZCOMPDIR)
-	install -m 755 completions/_fnt $(DESTDIR)/$(ZCOMPDIR)/
+	# No direct dir install/create because of *BSD
+	install -v -d $(DESTDIR)/$(BINDIR)
+	install -v -m 755 fnt $(DESTDIR)/$(BINDIR)/
+	install -v -d $(DESTDIR)/$(MANDIR)/man1
+	install -v -m 644 fnt.1 $(DESTDIR)/$(MANDIR)/man1/
+	gzip -v -9 $(DESTDIR)/$(MANDIR)/man1/fnt.1
+	install -v -d $(DESTDIR)/$(ZCOMPDIR)
+	install -v -m 755 completions/_fnt $(DESTDIR)/$(ZCOMPDIR)/
 
 uninstall:
-	rm -f $(DESTDIR)/$(BINDIR)/fnt
-	rm -f $(DESTDIR)/$(MANDIR)/man1/fnt.1.gz
-	rm -f $(DESTDIR)/$(ZCOMPDIR)/_fnt
+	rm -v -f $(DESTDIR)/$(BINDIR)/fnt
+	rm -v -f $(DESTDIR)/$(MANDIR)/man1/fnt.1.gz
+	rm -v -f $(DESTDIR)/$(ZCOMPDIR)/_fnt
 
 clean:
 	@echo nothing to clean
