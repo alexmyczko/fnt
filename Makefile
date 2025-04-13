@@ -10,11 +10,13 @@ all:
 	@echo make uninstall        to remove the software
 
 install:
-	if test ! -d $(DESTDIR)/$(BINDIR) ; then mkdir -p $(DESTDIR)/$(BINDIR) ; fi
+	# No direct dir creation because of *BSD
+	install -d $(DESTDIR)/$(BINDIR)
 	install -m 755 fnt $(DESTDIR)/$(BINDIR)/
-	if test ! -d $(DESTDIR)/$(MANDIR)/man1 ; then mkdir -p $(DESTDIR)/$(MANDIR)/man1; fi
-	install -c -m 644 fnt.1 $(DESTDIR)/$(MANDIR)/man1/ ; gzip -9 $(DESTDIR)/$(MANDIR)/man1/fnt.1
-	if test ! -d $(DESTDIR)/$(ZCOMPDIR) ; then mkdir -p $(DESTDIR)/$(ZCOMPDIR) ; fi
+	install -d $(DESTDIR)/$(MANDIR)/man1
+	install -m 644 fnt.1 $(DESTDIR)/$(MANDIR)/man1/
+	gzip -9 $(DESTDIR)/$(MANDIR)/man1/fnt.1
+	install -d $(DESTDIR)/$(ZCOMPDIR)
 	install -m 755 completions/_fnt $(DESTDIR)/$(ZCOMPDIR)/
 
 uninstall:
