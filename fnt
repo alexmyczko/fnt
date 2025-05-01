@@ -133,8 +133,8 @@ case "$1" in
 		# Package: fonts-agave Version: 37-1 Installed-Size: 364 Description: monospaces programming font Homepage: https://b.agaric.net/page/agave Filename: pool/main/f/fonts-agave/fonts-agave_37-1_all.deb Size: 103112
 
         	if [ -z "$p" ]; then
-		    q=$(curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
-		    s=$(curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
+		    q=$(curl -L -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
+		    s=$(curl -L -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep "$2" | head -1)
 
 		    if [ -z "$q" ] && [ -z "$s" ]; then
         		echo "Font \"$2\" not found"
@@ -159,13 +159,25 @@ case "$1" in
 		url=$(echo "$p" | awk '{print $(NF-2)}')
 		f=$(basename "$url")
 		echo "Installing ${name} ${ver} [${downsize} ${instsize}000 ${MIRROR}${url}]..."
-		curl -s "${MIRROR}${url}" -o "${TMPDIR}/$f"
-		cd "${TMPDIR}" || exit 1
-		ar x "$f"
-		tar xJf data.tar.xz
-		find "${TMPDIR}" . -name "*.?tf" -exec cp {} "$target" \;
-		rm "$f" control.tar* data.tar* debian-binary
-		rm -rf "${TMPDIR:?}/usr"
+		TEMPDIR="$(mktemp -u -d -t fnt-XXXXXXX)"
+		mkdir -p "$TEMPDIR"
+		chmod go-rwx "$TEMPDIR"
+		trap 'rm -rf -- "$TEMPDIR"' EXIT
+		PIT="${TEMPDIR}"/extract
+		mkdir -p "$PIT"/{control,data} || { echo "Couldn't create temporary workfolder." exit 1 ; }
+		curl -L -s "${MIRROR}${url}" -o "${TEMPDIR}/$f"
+		cd "${TEMPDIR}" || exit 1
+		DATA="$(ar t "$TEMPDIR"/"$f" | grep '^data\.tar')"
+		cd "${PIT}/data" || exit 1
+		ar x "${TEMPDIR}/$f" "$DATA"
+		tar xf "${PIT}/data/$DATA"
+		find "${PIT}/data" -name "*.?tf" -exec cp {} "$target" \;
+		# deb control
+		CONTROL="$(ar t "$TEMPDIR"/"$f" | grep '^control\.tar')"
+		mkdir -p "${PIT}/control"
+		cd "${PIT}/control" || exit 1
+		ar x "${TEMPDIR}/$f" "$CONTROL"
+		tar xf "${PIT}/control/${CONTROL}"
 	;;
 	remove|-r)
 		echo "Removing..."
@@ -173,8 +185,8 @@ case "$1" in
 	;;
 	search|-s)
 		unxz -c "$HOME/.fnt/Packages.xz" |grep ^Package:\ fonts-|awk '{print $2}' | grep "$2"
-		curl -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
-		curl -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
+		curl -L -s "$GINDEX/ofl/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
+		curl -L -s "$GINDEX/apache/" |grep "a href" |sed 's,.*">,google-,;s,/.*,,' |grep -v "\.\.$" |grep "$2"
 	;;
 	moo)
 		echo "This fnt does not have cow powers."
