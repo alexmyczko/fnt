@@ -147,10 +147,6 @@ https://fontforge.org/en-US/
 
 https://birdfont.org/
 
-# But you know this Comic Sans font?
-
-[http://www.comicsanscriminal.com/](https://web.archive.org/web/20230119134258/http://www.comicsanscriminal.com/) kindly, go fuck yourself.
-
 # Serve fonts on the web as woff2 and save a lot of traffic
 
 https://github.com/google/woff2
