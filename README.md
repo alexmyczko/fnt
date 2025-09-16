@@ -29,7 +29,7 @@ Host them [yourself](https://wicki.io/posts/2020-11-goodbye-google-fonts/).
 
 [Debian sid](https://packages.debian.org/unstable/fonts/), ~500 fonts available, only those starting with `fonts-`
 
-[Google fonts](https://github.com/google/fonts), ~1800 fonts available, (`google-` prefixed)
+[Google fonts](https://github.com/google/fonts), ~1900 fonts available, (`google-` prefixed)
 
 # Installation
 
