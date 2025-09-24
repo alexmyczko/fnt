@@ -28,9 +28,11 @@ uninstall:
 
 macos:
     @echo building for macOS
+	clang -framework Cocoa -o FNT FNT.m
 
 gnustep:
     @echo building for GNUstep
+	gcc `gnustep-config --objc-flags` -lgnustep-base -lgnustep-gui -lgnustep-back -fobjc-arc -o FNT FNT.m
 
 clean:
 	@echo nothing to clean
