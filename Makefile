@@ -8,6 +8,8 @@ VERSION := $(shell sed -n 's/^VERSION\s*=\s*\(.*\)/\1/p' $(BIN))
 all:
 	@echo make install          to install the software
 	@echo make uninstall        to remove the software
+	@echo make macos            build macOS gui
+	@echo make gnustep          build GNUstep gui
 
 install:
 	# No direct dir install/create because of *BSD
@@ -23,6 +25,12 @@ uninstall:
 	rm -v -f $(DESTDIR)/$(BINDIR)/fnt
 	rm -v -f $(DESTDIR)/$(MANDIR)/man1/fnt.1.gz
 	rm -v -f $(DESTDIR)/$(ZCOMPDIR)/_fnt
+
+macos:
+    @echo building for macOS
+
+gnustep:
+    @echo building for GNUstep
 
 clean:
 	@echo nothing to clean
