@@ -65,32 +65,17 @@ download() {
 	# shellcheck disable=SC2086
 	local URL LOPTS
 	URL="$1"
-	if test -z "${1##*.deb}"; then
-		if /usr/bin/which /usr/lib/apt/apt-helper>/dev/null
-		then
-			# Test if we could use an local apt-proxy (non-ssl) but no worry we do
-			# md5sum checking on the file anyway.
-			PROXYURL=${URL/https:/http:}
-			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy "$PROXYURL" |
-				awk -F\' '{print $2}')"; then
-							URL=$PROXYURL;
-			fi
-			# shellcheck disable=SC2090,SC2086
-			/usr/lib/apt/apt-helper $LOPTS download-file "$URL" "$2" >/dev/null
-			return
-		fi
-	fi
-	if /usr/bin/which fetch>/dev/null
+	if /usr/bin/which fetch>/dev/null 2>&1
 	then
 		fetch -q -o "$2" "$URL"
-	elif /usr/bin/which curl>/dev/null
+	elif /usr/bin/which curl>/dev/null 2>&1
 	then
 		curl -g -L -s -o "$2" "$URL"
-	elif /usr/bin/which wget>/dev/null
+	elif /usr/bin/which wget>/dev/null 2>&1
 	then
 		wget -q -O "$URL" "$2"
 	else
-		print "ERROR: neither apt-helper, wget, curl nor fetch is installed" >&2
+		print "ERROR: neither wget, curl nor fetch is installed" >&2
 		exit 69
 	fi
 }
@@ -251,11 +236,33 @@ case "$s" in
 		FNTDATA="$HOME/.fnt"
 	;;
 	Linux|GNU/kFreeBSD|GNU)
-		#echo Linux
 		md5="md5sum"
 		check="$md5 ar awk curl file otfinfo tar unxz xzcat"
-		i="apt"
-#		TARGET="$HOME/.fonts/"
+
+		# Detect Linux distribution (ID= from /etc/os-release)
+		if [ -r /etc/os-release ]; then
+			. /etc/os-release
+			case "$ID" in
+				fedora|rhel|centos|rocky|almalinux)
+					i="dnf"
+					;;
+				arch|manjaro|endeavouros)
+					i="pacman"
+					;;
+				opensuse*|sles)
+					i="zypper"
+					;;
+				debian|ubuntu|linuxmint|pop|zorin)
+					i="apt"
+					;;
+				*)
+					i="your package manager"
+					;;
+			esac
+		else
+			i="your package manager"
+		fi
+
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
 		fi
@@ -323,14 +330,14 @@ EOF
 	;;
 
 	update|-u)
-		echo -n "Updating... "
+		echo -n -e "Updating... \n"
 		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES" "$APACHE" "$OFL"
 		PACKAGESTMP=$(mktemp)
 		download "$INDEX" "$PACKAGESTMP"
 		xzcat "$PACKAGESTMP" | awk '/^Package: fonts-/,/^$/' > "${PACKAGES%.xz}";
-		xz "${PACKAGES%.xz}" ; rm "$PACKAGESTMP" ; echo -n "${PACKAGES##*/}... "
-		download "$APACHEINDEX" "$APACHE"; echo -n "${APACHE##*/}... "
-		download "$OFLINDEX" "$OFL"; echo -n "${OFL##*/}... "
+		xz "${PACKAGES%.xz}" ; rm "$PACKAGESTMP" ; echo -n -e "${PACKAGES##*/}... \n"
+		download "$APACHEINDEX" "$APACHE"; echo -n -e "${APACHE##*/}... \n"
+		download "$OFLINDEX" "$OFL"; echo -n -e "${OFL##*/}... \n"
 		echo -n -e "done.\n"
 	;;
 
