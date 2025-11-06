@@ -59,9 +59,9 @@ download() {
 			# Test if we could use an local apt-proxy (non-ssl) but no worry we do
 			# md5sum checking on the file anyway.
 			PROXYURL=${URL/https:/http:}
-			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy "$PROXYURL" |
-				awk -F\' '{print $2}')"; then
-							URL=$PROXYURL;
+			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy \
+				"$PROXYURL" | awk -F\' '{print $2}')"; then
+			URL=$PROXYURL;
 			fi
 			# shellcheck disable=SC2090,SC2086
 			/usr/lib/apt/apt-helper $LOPTS download-file "$URL" "$2" >/dev/null
