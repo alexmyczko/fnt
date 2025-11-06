@@ -234,7 +234,6 @@ case "$s" in
 		md5="md5sum"
 		check="$md5 curl brew otfinfo ar"
 		# otfinfo comes with lcdf-typetools
-		i="brew"
 		TARGET="$HOME/Library/Fonts/"
 		FNTDATA="$HOME/.fnt"
 	;;
@@ -242,7 +241,6 @@ case "$s" in
 		#echo Linux
 		md5="md5sum"
 		check="$md5 ar awk curl file otfinfo tar unxz xzcat"
-		i="apt"
 #		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
@@ -252,7 +250,6 @@ case "$s" in
 		#echo FreeBSD
 		md5="md5"
 		check="$md5 curl otfinfo ar"
-		i="pkg"
 		TARGET="$HOME/.fonts"
 		FNTDATA="$HOME/.fnt"
 	;;
@@ -260,20 +257,17 @@ case "$s" in
 		#echo OpenBSD
 		md5="md5"
 		check="$md5 curl otfinfo ar"
-		i="pkg_add"
 		#TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
 		#echo Haiku OS
 		check="curl ar"
-		i="pkgman"
 		TARGET="$HOME/config/non-packaged/data/fonts"
 		FNTDATA="$HOME/.fnt"
 	;;
 	Windows)
 		#echo Windows
 		check="cmd.exe"
-		i="ENOPKGMANAGER"
 		TARGET="$USERPROFILE\\Fonts"
 	;;
 	*)
@@ -284,7 +278,7 @@ esac
 
 for a in $check; do
 	if ! command -v "$a" &>/dev/null; then
-		echo "$a not found, please use $i to install it."
+		echo "$a not found, please install it with your package manager."
 		exit 69
 	fi
 done
