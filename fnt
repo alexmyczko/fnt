@@ -40,18 +40,6 @@ fi
 
 check_com() { if ! command -v "$1" &> /dev/null; then return 1; fi ; }
 
-# Pipelines
-pipe_download(){
-	local PIPEFILE
-	PIPEDIR="$(mktemp -d)"
-	PIPEFILE="${1%%*/}"
-	if test -z "$PIPEFILE"; then PIPEFILE=index; fi
-	chmod go-rwx "$PIPEDIR"
-	trap 'rm -rf -- "$PIPEDIR"' EXIT
-	download "$1" "$PIPEDIR/$PIPEFILE"
-	cat "$PIPEDIR/$PIPEFILE"
-}
-
 search() {
 	if [ -r "$PACKAGES" ] && [ -r "$APACHE" ] && [ -r "$OFL" ]; then
 		xzcat "$PACKAGES" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
