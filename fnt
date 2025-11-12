@@ -32,7 +32,9 @@ if [ ! -d "$FNTDATA" ] || [ ! -d "$FNTINDEXDIR" ]; then
 	mkdir -p "$FNTINDEXDIR" || { echo "Couldn't create cache+index directory: $FNTDATA + /index" ; exit 1 ; }
 fi
 
-if ! command -v uname &>/dev/null; then
+check_com() { if ! command -v "$1" &> /dev/null; then return 1; fi ; }
+
+if ! check_com uname; then
 	s="Windows"
 else
 	s=$(uname -s)
@@ -54,8 +56,7 @@ download() {
 	local URL LOPTS
 	URL="$1"
 	if test -z "${1##*.deb}"; then
-		if /usr/bin/which /usr/lib/apt/apt-helper>/dev/null
-		then
+		if check_com /usr/lib/apt/apt-helper; then
 			# Test if we could use an local apt-proxy (non-ssl) but no worry we do
 			# md5sum checking on the file anyway.
 			PROXYURL=${URL/https:/http:}
@@ -68,14 +69,11 @@ download() {
 			return
 		fi
 	fi
-	if /usr/bin/which fetch>/dev/null
-	then
+	if check_com fetch; then
 		fetch -q -o "$2" "$URL"
-	elif /usr/bin/which curl>/dev/null
-	then
+	elif check_com curl; then
 		curl -g -L -s -o "$2" "$URL"
-	elif /usr/bin/which wget>/dev/null
-	then
+	elif check_com wget; then
 		wget -q -O "$URL" "$2"
 	else
 		print "ERROR: neither apt-helper, wget, curl nor fetch is installed" >&2
@@ -277,15 +275,14 @@ case "$s" in
 esac
 
 for a in $check; do
-	if ! command -v "$a" &>/dev/null; then
+	if ! check_com "$a"; then
 		echo "$a not found, please install it with your package manager."
 		exit 69
 	fi
 done
 
-cat=$(command -v lolcat || :)
+if check_com lolcat; then cat=lolcat; else cat=cat; fi
 PATH="/usr/games:$PATH"
-if test -z "$cat"; then cat=$(command -v cat); fi
 
 case "$1" in
 	help|-h)
