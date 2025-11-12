@@ -40,17 +40,7 @@ else
 	s=$(uname -s)
 fi
 
-# Pipelines
-pipe_download(){
-	local PIPEFILE
-	PIPEDIR="$(mktemp -d)"
-	PIPEFILE="${1%%*/}"
-	if test -z "$PIPEFILE"; then PIPEFILE=index; fi
-	chmod go-rwx "$PIPEDIR"
-	trap 'rm -rf -- "$PIPEDIR"' EXIT
-	download "$1" "$PIPEDIR/$PIPEFILE"
-	cat "$PIPEDIR/$PIPEFILE"
-}
+check_com() { if ! command -v "$1" &> /dev/null; then return 1; fi ; }
 
 search() {
 	if [ -r "$PACKAGES" ] && [ -r "$APACHE" ] && [ -r "$OFL" ]; then
@@ -70,9 +60,9 @@ download() {
 			# Test if we could use an local apt-proxy (non-ssl) but no worry we do
 			# md5sum checking on the file anyway.
 			PROXYURL=${URL/https:/http:}
-			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy "$PROXYURL" |
-				awk -F\' '{print $2}')"; then
-							URL=$PROXYURL;
+			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy \
+				"$PROXYURL" | awk -F\' '{print $2}')"; then
+			URL=$PROXYURL;
 			fi
 			# shellcheck disable=SC2090,SC2086
 			/usr/lib/apt/apt-helper $LOPTS download-file "$URL" "$2" >/dev/null
@@ -242,7 +232,6 @@ case "$s" in
 		md5="md5sum"
 		check="$md5 curl brew otfinfo ar"
 		# otfinfo comes with lcdf-typetools
-		i="brew"
 		TARGET="$HOME/Library/Fonts/"
 		FNTDATA="$HOME/.fnt"
 	;;
@@ -250,7 +239,6 @@ case "$s" in
 		#echo Linux
 		md5="md5sum"
 		check="$md5 ar awk curl file otfinfo tar unxz xzcat"
-		i="apt"
 #		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
@@ -260,7 +248,6 @@ case "$s" in
 		#echo FreeBSD
 		md5="md5"
 		check="$md5 curl otfinfo ar"
-		i="pkg"
 		TARGET="$HOME/.fonts"
 		FNTDATA="$HOME/.fnt"
 	;;
@@ -268,20 +255,17 @@ case "$s" in
 		#echo OpenBSD
 		md5="md5"
 		check="$md5 curl otfinfo ar"
-		i="pkg_add"
 		#TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
 		#echo Haiku OS
 		check="curl ar"
-		i="pkgman"
 		TARGET="$HOME/config/non-packaged/data/fonts"
 		FNTDATA="$HOME/.fnt"
 	;;
 	Windows)
 		#echo Windows
 		check="cmd.exe"
-		i="ENOPKGMANAGER"
 		TARGET="$USERPROFILE\\Fonts"
 	;;
 	*)
@@ -292,7 +276,7 @@ esac
 
 for a in $check; do
 	if ! check_com "$a"; then
-		echo "$a not found, please use $i to install it."
+		echo "$a not found, please install it with your package manager."
 		exit 69
 	fi
 done
