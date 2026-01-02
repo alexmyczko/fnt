@@ -7,7 +7,7 @@ set -e
 # APT but only for fonts
 # alex@aiei.ch
 # christopher@bocki.com
-VERSION=1.9
+VERSION=1.9.1
 # Defaults
 BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
 TARGET="$BASE/fonts"
