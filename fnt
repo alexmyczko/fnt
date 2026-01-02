@@ -40,8 +40,6 @@ else
 	s=$(uname -s)
 fi
 
-check_com() { if ! command -v "$1" &> /dev/null; then return 1; fi ; }
-
 search() {
 	if [ -r "$PACKAGES" ] && [ -r "$APACHE" ] && [ -r "$OFL" ]; then
 		xzcat "$PACKAGES" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
