@@ -19,7 +19,7 @@ install:
 	install -v -m 644 fnt.1 $(DESTDIR)/$(MANDIR)/man1/
 	gzip -v -9 $(DESTDIR)/$(MANDIR)/man1/fnt.1
 	install -v -d $(DESTDIR)/$(ZCOMPDIR)
-	install -v -m 755 completions/_fnt $(DESTDIR)/$(ZCOMPDIR)/
+	install -v -m 644 completions/_fnt $(DESTDIR)/$(ZCOMPDIR)/
 
 uninstall:
 	rm -v -f $(DESTDIR)/$(BINDIR)/fnt
