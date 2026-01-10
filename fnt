@@ -87,11 +87,26 @@ deb_handler() {
 	PIT="${TMPDIR}/extract"
 	mkdir -m go-rwx "$PIT" || { echo "Couldn't eat tartar." ; exit 73 ; }
 	NAME="$1"
-	INFOS="$(unxz -c "$PACKAGES" | sed -n '/^Package: '"$NAME"'$/,/^$/ {H}; /^Package: '"$NAME"'$/ h; $ {g;p}' | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
+	INFOS="$(
+	  unxz -c "$PACKAGES" |
+	  awk -v pkg="$NAME" '
+	    BEGIN { RS=""; FS="\n" }
+	    $0 ~ ("^Package: " pkg "(\n|$)") {
+	      for (i = 1; i <= NF; i++) {
+	        if ($i ~ /^(Version|Installed-Size|Filename|Size|MD5sum): /) print $i
+	      }
+	      exit
+	    }
+	  '
+	)"
 	VER="$(awk '/^Version: /{print$2}' <<< "$INFOS")"
 	INSTSIZE="$(awk '/^Installed-Size: /{print$2}' <<< "$INFOS")"
 	DOWNSIZE="$(awk '/^Size: /{print$2}' <<< "$INFOS")"
 	FPATH="$(awk '/^Filename: /{print$2}' <<< "$INFOS")"
+	if [ -z "$FPATH" ] || [ -z "$FNAME" ]; then
+		echo "Could not find Filename for package '$NAME' in Packages index." >&2
+		exit 65
+	fi
 	FNAME="$(basename "$FPATH")"
 	MD5SUM="$(awk '/^MD5sum: /{print$2}' <<< "$INFOS") ${FNAME}"
 	echo "Installing $NAME $VER [${DOWNSIZE} ${INSTSIZE}000 ${MIRROR}/${FPATH}]..."
