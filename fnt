@@ -8,6 +8,8 @@ set -e
 # alex@aiei.ch
 # christopher@bocki.com
 VERSION=1.9.1
+FNT_AWK=${FNT_AWK:-awk}
+FNT_SED=${FNT_SED:-sed}
 # Defaults
 BASE=${XDG_DATA_HOME:-"$HOME/.local/share"}
 TARGET="$BASE/fonts"
@@ -42,8 +44,8 @@ fi
 
 search() {
 	if [ -r "$PACKAGES" ] && [ -r "$APACHE" ] && [ -r "$OFL" ]; then
-		xzcat "$PACKAGES" | awk '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
-		xzcat "$APACHE" "$OFL" | awk '/^Package: .*'"$1"'.*/ {gsub(/^/, "google-", $2); print $2}'
+		xzcat "$PACKAGES" | "$FNT_AWK" '/^Package: fonts-.*'"$1"'.*/ {gsub(/^Package: /,"");print;}'
+		xzcat "$APACHE" "$OFL" | "$FNT_AWK" '/^Package: .*'"$1"'.*/ {gsub(/^/, "google-", $2); print $2}'
 	else
 		echo "Can't find any Data, please run ${BASH_SOURCE[0]} update and try again."
 	fi
@@ -59,7 +61,7 @@ download() {
 			# md5sum checking on the file anyway.
 			PROXYURL=${URL/https:/http:}
 			if test -n "$(/usr/lib/apt/apt-helper auto-detect-proxy \
-				"$PROXYURL" | awk -F\' '{print $2}')"; then
+				"$PROXYURL" | "$FNT_AWK" -F\' '{print $2}')"; then
 			URL=$PROXYURL;
 			fi
 			# shellcheck disable=SC2090,SC2086
@@ -87,13 +89,13 @@ deb_handler() {
 	PIT="${TMPDIR}/extract"
 	mkdir -m go-rwx "$PIT" || { echo "Couldn't eat tartar." ; exit 73 ; }
 	NAME="$1"
-	INFOS="$(unxz -c "$PACKAGES" | sed -n '/^Package: '"$NAME"'$/,/^$/ {H}; /^Package: '"$NAME"'$/ h; $ {g;p}' | awk '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
-	VER="$(awk '/^Version: /{print$2}' <<< "$INFOS")"
-	INSTSIZE="$(awk '/^Installed-Size: /{print$2}' <<< "$INFOS")"
-	DOWNSIZE="$(awk '/^Size: /{print$2}' <<< "$INFOS")"
-	FPATH="$(awk '/^Filename: /{print$2}' <<< "$INFOS")"
+	INFOS="$(unxz -c "$PACKAGES" | "$FNT_SED" -n '/^Package: '"$NAME"'$/,/^$/ {H}; /^Package: '"$NAME"'$/ h; $ {g;p}' | "$FNT_AWK" '/^(Version|Installed-Size|Filename|Size|MD5sum): /')"
+	VER="$("$FNT_AWK" '/^Version: /{print$2}' <<< "$INFOS")"
+	INSTSIZE="$("$FNT_AWK" '/^Installed-Size: /{print$2}' <<< "$INFOS")"
+	DOWNSIZE="$("$FNT_AWK" '/^Size: /{print$2}' <<< "$INFOS")"
+	FPATH="$("$FNT_AWK" '/^Filename: /{print$2}' <<< "$INFOS")"
 	FNAME="$(basename "$FPATH")"
-	MD5SUM="$(awk '/^MD5sum: /{print$2}' <<< "$INFOS") ${FNAME}"
+	MD5SUM="$("$FNT_AWK" '/^MD5sum: /{print$2}' <<< "$INFOS") ${FNAME}"
 	echo "Installing $NAME $VER [${DOWNSIZE} ${INSTSIZE}000 ${MIRROR}/${FPATH}]..."
 	cd "$TMPDIR" || { echo "Couldn't cd into $TMPDIR" ; exit 66 ; }
 	test -z "$(download "${MIRROR}/${FPATH}" "${TMPDIR}/$FNAME")" || { echo "Couldn't retrieve file." ; exit 69 ; }
@@ -110,8 +112,8 @@ deb_handler() {
 		mkdir -p "${PIT}/control" && cd "${PIT}/control"
 		ar x "${TMPDIR}/$FNAME" "$CONTROL"
 		tar xf "${PIT}/control/${CONTROL}"
-		sed -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTINDEXDIR/$NAME"
-		awk -v pkg="$NAME" '$1="";{printf "Package: %s File:%s\n", pkg, $NFR}' "$FNTINDEXDIR/$NAME"
+		"$FNT_SED" -n 's/^\(.*\) .*\/\(.*tf$\)/\1 \2/p' "${PIT}/control/md5sums" > "$FNTINDEXDIR/$NAME"
+		"$FNT_AWK" -v pkg="$NAME" '$1="";{printf "Package: %s File:%s\n", pkg, $NFR}' "$FNTINDEXDIR/$NAME"
 	else
 		echo "Can't verify md5sum!"
 		exit 65
@@ -138,18 +140,18 @@ fnt_install() {
 		mkdir -p "$TARGET"
 	fi
 	# look for first font match
-	p="$(unxz -c "$PACKAGES" | awk '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
+	p="$(unxz -c "$PACKAGES" | "$FNT_AWK" '/^Package: (fonts-)?'"$FNTMATCH"'/ {gsub(/^Package: /,"");print;exit;}')"
 	if !  [ -z "$p" ]; then
 		deb_handler "$p"
 		return
 	fi
 	FNTMATCH=${FNTMATCH/google-/}
-	a="$(unxz -c "$APACHE" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
+	a="$(unxz -c "$APACHE" | "$FNT_AWK" '/Package: '"$FNTMATCH"'$/,/^$/')"
 	if ! [ -z "$a" ]; then
-		url=$(awk '/^URL:/ {print$2}' <<< "$a")
+		url=$("$FNT_AWK" '/^URL:/ {print$2}' <<< "$a")
 		dir="${url##*/}"
-		files="$(awk '/^ .*\.?tf$/ {print $2}' <<< "$a")"
-		md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$a")"
+		files="$("$FNT_AWK" '/^ .*\.?tf$/ {print $2}' <<< "$a")"
+		md5sums="$("$FNT_AWK" '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$a")"
 		for file in $files; do
 			download "${url}/${file}" "${TARGET}/${file}"
 			echo "Package: $FNTMATCH File: $file"
@@ -157,12 +159,12 @@ fnt_install() {
 		echo "$md5sums" > "${FNTINDEXDIR}/google-${dir}"
 		return
 	else
-		o="$(unxz -c "$OFL" | awk '/Package: '"$FNTMATCH"'$/,/^$/')"
+		o="$(unxz -c "$OFL" | "$FNT_AWK" '/Package: '"$FNTMATCH"'$/,/^$/')"
 		if ! [ -z "$o" ]; then
-			url="$(awk '/^URL:/ {print$2}' <<< "$o")"
+			url="$("$FNT_AWK" '/^URL:/ {print$2}' <<< "$o")"
 			dir="${url##*/}"
-			files="$(awk '/^ .*\.?tf$/ {print $2}' <<< "$o")"
-			md5sums="$(awk '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$o")"
+			files="$("$FNT_AWK" '/^ .*\.?tf$/ {print $2}' <<< "$o")"
+			md5sums="$("$FNT_AWK" '/^ .*\.?tf$/ {gsub(/^ /,""); print}' <<< "$o")"
 			for file in $files; do
 				download "${url}/${file}" "${TARGET}/${file}"
 				echo "Package: $FNTMATCH File: $file"
@@ -204,7 +206,7 @@ preview() {
 	PREVIEWURI="https://screenshots.debian.net/screenshot/fonts-$1"
 	if download "$PREVIEWURI" "${PREVIEW}"; then
 		# if we get nothing / "this picture is not available" pic
-		if [ "$($md5 "$PREVIEW" | awk '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
+		if [ "$($md5 "$PREVIEW" | "$FNT_AWK" '{print$1}')" = "b5765b390157e36eaf721c8848a4b04d" ]; then
 			PREVIEWURI="$GINDEX/preview/$1/preview.webp"
 			if download "$PREVIEWURI" "$PREVIEW"; then
 				if ! file --brief --mime-type "$PREVIEW" |grep -q 'image/*'; then
@@ -236,7 +238,7 @@ case "$s" in
 	Linux|GNU/kFreeBSD|GNU)
 		#echo Linux
 		md5="md5sum"
-		check="$md5 ar awk curl file otfinfo tar unxz xzcat"
+		check="$md5 ar "$FNT_AWK" curl file otfinfo tar unxz xzcat"
 #		TARGET="$HOME/.fonts/"
 		if [ 0 -eq "$(id -u)" ]; then
 			TARGET="/usr/local/share/fonts/"
@@ -304,7 +306,7 @@ EOF
 		mkdir -p "${FNTDATA}/index" && rm -rf "$PACKAGES" "$APACHE" "$OFL"
 		PACKAGESTMP=$(mktemp)
 		download "$INDEX" "$PACKAGESTMP"
-		xzcat "$PACKAGESTMP" | awk '/^Package: fonts-/,/^$/' > "${PACKAGES%.xz}";
+		xzcat "$PACKAGESTMP" | "$FNT_AWK" '/^Package: fonts-/,/^$/' > "${PACKAGES%.xz}";
 		xz "${PACKAGES%.xz}" ; rm "$PACKAGESTMP" ; echo -n "${PACKAGES##*/}... "
 		download "$APACHEINDEX" "$APACHE"; echo -n "${APACHE##*/}... "
 		download "$OFLINDEX" "$OFL"; echo -n "${OFL##*/}... "
@@ -333,16 +335,16 @@ EOF
 				sort | while read -r f; do
 					IDX=$(basename "$(grep -rlF "$(basename "$f")" "$FNTINDEXDIR")")
 					if test -z "$IDX"; then IDX=NOT-MANAGED-BY-FNT; fi
-					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l | awk '{print $1}')]"
+					echo "$IDX: $(basename "${f}") [$(otfinfo -u "$f" 2>/dev/null | wc -l | "$FNT_AWK" '{print $1}')]"
 					unset IDX
 				done
 		fi
 		if [ $# -eq 2 ] && [ "$2" = "index" ] ; then
-			find "$FNTINDEXDIR" -type f | awk -F'/' '{print $NF}'
+			find "$FNTINDEXDIR" -type f | "$FNT_AWK" -F'/' '{print $NF}'
 		fi
 		if [ $# -eq 2 ] && [ -r "$FNTINDEXDIR/$2" ]; then
 			# shellcheck disable=SC2046
-			awk -v target="$TARGET" \
+			"$FNT_AWK" -v target="$TARGET" \
 				'$1="";{printf "%s/%s\n", target, substr($0,2)}' \
 				"$FNTINDEXDIR/$2" |
 				while read -r font; do
@@ -358,7 +360,7 @@ EOF
 		fi
 		mkdir -p "$FNTINDEXDIR"
 		rm -f "${FNTDATA}/preview.png"
-		FNTMATCH="$(sed -E 's/^(fonts|google)-//g' <<< "$2")"
+		FNTMATCH="$("$FNT_SED" -E 's/^(fonts|google)-//g' <<< "$2")"
 		preview "$FNTMATCH"
 	;;
 	install|-i)
@@ -371,7 +373,7 @@ EOF
 		fi
 		if [ $# -eq 2 ] && [ -w "$FNTINDEXDIR/$2" ] ; then
 			if [ -e "$FNTINDEXDIR/$2" ]; then
-			awk '{print$2}' "$FNTINDEXDIR/$2" |while read -r FONTFILE; do
+			"$FNT_AWK" '{print$2}' "$FNTINDEXDIR/$2" |while read -r FONTFILE; do
 			${BASH_SOURCE[0]} remove "$2" "$FONTFILE"
 		done
 		else
