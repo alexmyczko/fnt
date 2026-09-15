@@ -51,6 +51,17 @@ search() {
 	fi
 }
 
+urlencode() {
+	local s="$1" i c
+	for ((i=0; i<${#s}; i++)); do
+		c=${s:i:1}
+		case "$c" in
+			[a-zA-Z0-9.~_-]) printf '%s' "$c" ;;
+			*) printf '%%%02X' "'$c" ;;
+		esac
+	done
+}
+
 download() {
 	# shellcheck disable=SC2086
 	local URL LOPTS
@@ -69,12 +80,14 @@ download() {
 			return
 		fi
 	fi
+	# Make sure special non-alpha chars are encoded for filenames.
+	URL="${URL%/*}/$(urlencode "${URL##*/}")"
 	if check_com fetch; then
 		fetch -q -o "$2" "$URL"
 	elif check_com curl; then
 		curl -g -L -s -o "$2" "$URL"
 	elif check_com wget; then
-		wget -q -O "$URL" "$2"
+		wget -q -O "$2" "$URL"
 	else
 		print "ERROR: neither apt-helper, wget, curl nor fetch is installed" >&2
 		exit 69
