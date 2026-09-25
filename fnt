@@ -186,6 +186,8 @@ fnt_install() {
 			return
 		fi
 	fi
+	echo "Font \"$2\" not found"
+	exit 1
 }
 
 render_preview() {
