@@ -262,14 +262,14 @@ case "$s" in
 	FreeBSD)
 		#echo FreeBSD
 		md5="md5"
-		check="$md5 curl otfinfo ar"
+		check="$md5 fetch otfinfo ar"
 		TARGET="$HOME/.fonts"
 		FNTDATA="$HOME/.fnt"
 	;;
 	OpenBSD)
 		#echo OpenBSD
 		md5="md5"
-		check="$md5 curl otfinfo ar"
+		check="$md5 fetch otfinfo ar"
 		#TARGET="$HOME/.local/share/fonts"
 	;;
 	Haiku)
